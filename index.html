@@ -154,20 +154,23 @@
             width: 100%;
         }
 
+        /* [핵심 수정] 일반 배치 완료된 카드 슬롯 */
         .card-slot {
             background-color: var(--card-bg);
-            padding: 6px;
+            padding: 8px;
             border-radius: 6px;
             font-size: 0.85rem;
             border: 1px solid #4a5568;
+            color: #fff;
         }
-        /* 빈자리 슬롯 스타일 투명도 조절 */
+
+        /* [핵심 수정] 카드가 없을 때도 무조건 뚜렷하게 형태를 유지하는 빈자리 슬롯 스타일 */
         .card-slot.empty-slot {
-            border-style: dashed;
-            border-color: #4a5568;
-            color: #718096;
-            background-color: transparent;
+            border: 1px solid #3d4654 !important;
+            color: #5d6d82 !important;
+            background-color: rgba(20, 20, 25, 0.6) !important;
         }
+
         .card-slot.hidden-card {
             background: repeating-linear-gradient(45deg, #2d3748, #2d3748 10px, #222831 10px, #222831 20px);
             color: #718096;
@@ -332,21 +335,33 @@
         <div class="battlefield">
             <div class="zone ai" id="zone-A-ai" onclick="targetZone('A')">
                 <div class="zone-title">[접전지 A]</div>
-                <div class="card-slot-wrapper" id="slots-A-ai"></div>
+                <div class="card-slot-wrapper" id="slots-A-ai">
+                    <div class="card-slot empty-slot">1선발: [ 비공개 ]</div>
+                    <div class="card-slot empty-slot">2선발: [ 비공개 ]</div>
+                    <div class="card-slot empty-slot">3선발: [ 비공개 ]</div>
+                </div>
                 <div class="item-status" id="item-A-ai">[ℹ️ 설치 아이템: 0개]</div>
                 <div class="zone-hp" id="hp-A-ai">HP: 4 / 4</div>
             </div>
 
             <div class="zone ai" id="zone-B-ai" onclick="targetZone('B')">
                 <div class="zone-title">[접전지 B]</div>
-                <div class="card-slot-wrapper" id="slots-B-ai"></div>
+                <div class="card-slot-wrapper" id="slots-B-ai">
+                    <div class="card-slot empty-slot">1선발: [ 비공개 ]</div>
+                    <div class="card-slot empty-slot">2선발: [ 비공개 ]</div>
+                    <div class="card-slot empty-slot">3선발: [ 비공개 ]</div>
+                </div>
                 <div class="item-status" id="item-B-ai">[ℹ️ 설치 아이템: 0개]</div>
-                <div class="zone-hp" id="hp-B-8">HP: 8 / 8</div>
+                <div class="zone-hp" id="hp-B-ai">HP: 8 / 8</div>
             </div>
 
             <div class="zone ai" id="zone-C-ai" onclick="targetZone('C')">
                 <div class="zone-title">[접전지 C]</div>
-                <div class="card-slot-wrapper" id="slots-C-ai"></div>
+                <div class="card-slot-wrapper" id="slots-C-ai">
+                    <div class="card-slot empty-slot">1선발: [ 비공개 ]</div>
+                    <div class="card-slot empty-slot">2선발: [ 비공개 ]</div>
+                    <div class="card-slot empty-slot">3선발: [ 비공개 ]</div>
+                </div>
                 <div class="item-status" id="item-C-ai">[ℹ️ 설치 아이템: 0개]</div>
                 <div class="zone-hp" id="hp-C-ai">HP: 4 / 4</div>
             </div>
@@ -355,21 +370,33 @@
 
             <div class="zone player" id="zone-A-player">
                 <div class="zone-title">[접전지 A]</div>
-                <div class="card-slot-wrapper" id="slots-A-player"></div>
+                <div class="card-slot-wrapper" id="slots-A-player">
+                    <div class="card-slot empty-slot">1선발: [ 빈자리 ]</div>
+                    <div class="card-slot empty-slot">2선발: [ 빈자리 ]</div>
+                    <div class="card-slot empty-slot">3선발: [ 빈자리 ]</div>
+                </div>
                 <div class="item-status" id="item-A-player">[⚙️ 설치: 없음]</div>
                 <div class="zone-hp" id="hp-A-player">HP: 4 / 4</div>
             </div>
 
             <div class="zone player" id="zone-B-player">
                 <div class="zone-title">[접전지 B]</div>
-                <div class="card-slot-wrapper" id="slots-B-player"></div>
+                <div class="card-slot-wrapper" id="slots-B-player">
+                    <div class="card-slot empty-slot">1선발: [ 빈자리 ]</div>
+                    <div class="card-slot empty-slot">2선발: [ 빈자리 ]</div>
+                    <div class="card-slot empty-slot">3선발: [ 빈자리 ]</div>
+                </div>
                 <div class="item-status" id="item-B-player">[⚙️ 설치: 없음]</div>
                 <div class="zone-hp" id="hp-B-player">HP: 8 / 8</div>
             </div>
 
             <div class="zone player" id="zone-C-player">
                 <div class="zone-title">[접전지 C]</div>
-                <div class="card-slot-wrapper" id="slots-C-player"></div>
+                <div class="card-slot-wrapper" id="slots-C-player">
+                    <div class="card-slot empty-slot">1선발: [ 빈자리 ]</div>
+                    <div class="card-slot empty-slot">2선발: [ 빈자리 ]</div>
+                    <div class="card-slot empty-slot">3선발: [ 빈자리 ]</div>
+                </div>
                 <div class="item-status" id="item-C-player">[⚙️ 설치: 없음]</div>
                 <div class="zone-hp" id="hp-C-player">HP: 4 / 4</div>
             </div>
@@ -473,14 +500,13 @@
             selectedCategory = null;
         }
 
-        // [수정] 데이터가 비어있어도 무조건 1, 2, 3선발 틀을 유지하는 핵심 렌더링 로직
+        // [수정] 카드가 비어있어도 무조건 어두운 회색 실선 박스 틀을 강제로 그리는 로직
         function renderSlots(slotsArray, containerId, isAI) {
             const container = document.getElementById(containerId);
             container.innerHTML = "";
 
             for (let i = 0; i < 3; i++) {
                 const cardName = slotsArray[i];
-                // 데이터가 없거나 '빈자리' 혹은 '비공개' 일 때 처리
                 if (!cardName || cardName === "빈자리" || cardName === "비공개") {
                     const defaultText = isAI ? "비공개" : "빈자리";
                     container.innerHTML += `<div class="card-slot empty-slot">${i+1}선발: [ ${defaultText} ]</div>`;
@@ -515,14 +541,11 @@
                     return;
                 }
 
-                // 일반 상태 정보 업데이트
-                const hpTargetAi = document.getElementById(`hp-${zId}-ai`);
-                if(hpTargetAi) hpTargetAi.innerText = `HP: ${zoneData.ai_hp} / ${zId === 'B' ? 8 : 4}`;
+                document.getElementById(`hp-${zId}-ai`).innerText = `HP: ${zoneData.ai_hp} / ${zId === 'B' ? 8 : 4}`;
                 document.getElementById(`hp-${zId}-player`).innerText = `HP: ${zoneData.player_hp} / ${zId === 'B' ? 8 : 4}`;
                 document.getElementById(`item-${zId}-ai`).innerText = `[ℹ️ 설치 아이템: ${zoneData.ai_item_count}개]`;
                 document.getElementById(`item-${zId}-player`).innerText = `[⚙️ 설치: ${zoneData.player_item_desc}]`;
 
-                // [수정 적용] 항상 고정 3칸 슬롯 렌더링 호출
                 renderSlots(zoneData.ai_slots, `slots-${zId}-ai`, true);
                 renderSlots(zoneData.player_slots, `slots-${zId}-player`, false);
             });
