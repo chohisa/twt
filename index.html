@@ -500,19 +500,23 @@
             selectedCategory = null;
         }
 
-        // [수정] 카드가 비어있어도 무조건 어두운 회색 실선 박스 틀을 강제로 그리는 로직
+// [수정] 서버에서 준 텍스트 값("빈자리", "비공개", "실제카드이름")에 따라 UI 완벽 구별
         function renderSlots(slotsArray, containerId, isAI) {
             const container = document.getElementById(containerId);
             container.innerHTML = "";
 
             for (let i = 0; i < 3; i++) {
-                const cardName = slotsArray[i];
-                if (!cardName || cardName === "빈자리" || cardName === "비공개") {
-                    const defaultText = isAI ? "비공개" : "빈자리";
-                    container.innerHTML += `<div class="card-slot empty-slot">${i+1}선발: [ ${defaultText} ]</div>`;
+                const cardName = slotsArray[i] || "빈자리";
+                
+                if (cardName === "빈자리") {
+                    // 배치가 안 된 완전히 빈 공간 스타일
+                    container.innerHTML += `<div class="card-slot empty-slot">${i+1}선발: [ 빈자리 ]</div>`;
+                } else if (cardName === "비공개") {
+                    // 카드는 배치되었으나 베일에 싸인 2, 3선발 스타일
+                    container.innerHTML += `<div class="card-slot hidden-card">${i+1}선발: [ 비공개 ]</div>`;
                 } else {
-                    const isHidden = cardName.includes("장막");
-                    container.innerHTML += `<div class="card-slot ${isHidden ? 'hidden-card' : ''}">${i+1}선발: [ ${cardName} ]</div>`;
+                    // 1선발처럼 카드가 당당하게 오픈되어 있는 스타일
+                    container.innerHTML += `<div class="card-slot">${i+1}선발: [ ${cardName} ]</div>`;
                 }
             }
         }
