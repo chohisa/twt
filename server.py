@@ -1,14 +1,11 @@
 # server.py
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
 import json
-import asyncio
 from game_core import GameEngine, Card, CardType
 
 app = FastAPI()
 engine = GameEngine()
 
-# 연결된 웹 브라우저 클라이언트들을 관리하는 매니저
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -35,41 +32,44 @@ def get_game_state_json():
         "is_player_turn": engine.is_player_turn,
         "global_items": engine.get_global_item_count(is_player=True),
         "zones": {
-            "A": {
-                "player_hp": engine.zones["A"].player_hp,
-                "ai_hp": engine.zones["A"].ai_hp,
-                "captured_by": engine.zones["A"].captured_by,
-                "player_slots": [c.sub_type if c else "빈자리" for c in engine.zones["A"].player_slots],
-                "ai_slots": [c.sub_type if c else "비공개" for c in engine.zones["A"].ai_slots], # 일단 껍데기 규칙
-                "player_item_desc": f"함정{len([i for i in engine.zones['A'].player_items if i.name=='함정'])}",
-                "ai_item_count": len(engine.zones["A"].ai_items)
-            },
-            "B": {
-                "player_hp": engine.zones["B"].player_hp,
-                "ai_hp": engine.zones["B"].ai_hp,
-                "captured_by": engine.zones["B"].captured_by,
-                "player_slots": [c.sub_type if c else "빈자리" for c in engine.zones["B"].player_slots],
-                "ai_slots": [c.sub_type if c else "비공개" for c in engine.zones["B"].ai_slots],
-                "player_item_desc": "아이템 없음",
-                "ai_item_count": len(engine.zones["B"].ai_items)
-            },
-            "C": {
-                "player_hp": engine.zones["C"].player_hp,
-                "ai_hp": engine.zones["C"].ai_hp,
-                "captured_by": engine.zones["C"].captured_by,
-                "player_slots": [c.sub_type if c else "빈자리" for c in engine.zones["C"].player_slots],
-                "ai_slots": [c.sub_type if c else "비공개" for c in engine.zones["C"].ai_slots],
-                "player_item_desc": f"함정{len([i for i in engine.zones['C'].player_items if i.name=='함정'])}",
-                "ai_item_count": len(engine.zones["C"].ai_items)
-            }
+            "A": format_zone_data("A"),
+            "B": format_zone_data("B"),
+            "C": format_zone_data("C")
         }
     }, ensure_ascii=False)
+
+def format_zone_data(zone_id: str):
+    """각 접전지의 슬롯 상태를 안전하게 가공합니다."""
+    zone = engine.zones[zone_id]
+    
+    # 플레이어 슬롯 가공
+    player_slots_desc = [c.sub_type if c else "빈자리" for c in zone.player_slots]
+    
+    # AI 슬롯 가공 (카드가 배치되어 있어도 기본적으로 유저 화면엔 '비공개'로 필터링)
+    # 단, 전투가 벌어져 장막이 걷히거나 패배한 카드가 아니라면 기본값은 '비공개'로 유지합니다.
+    ai_slots_desc = []
+    for c in zone.ai_slots:
+        if c:
+            # 전투 규칙 연동 전까지는 '비공개' 텍스트를 유지하되 데이터가 있음을 알림
+            ai_slots_desc.append("비공개") 
+        else:
+            ai_slots_desc.append("빈자리")
+            
+    return {
+        "player_hp": zone.player_hp,
+        "ai_hp": zone.ai_hp,
+        "captured_by": zone.captured_by,
+        "player_slots": player_slots_desc,
+        "ai_slots": ai_slots_desc,
+        "player_item_desc": "아이템 없음" if not zone.player_items else f"설치됨({len(zone.player_items)})",
+        "ai_item_count": len(zone.ai_items)
+    }
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     
-    # 접속하자마자 첫 상태 전송
+    # 접속하자마자 첫 상태(랜덤 배치된 1선발 포함) 전송
     await websocket.send_text(json.dumps({"type": "INIT", "state": json.loads(get_game_state_json())}, ensure_ascii=False))
     
     try:
@@ -77,18 +77,13 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             event = json.loads(data)
             
-            # 유저가 공격 카드를 내서 상대를 조준했을 때의 이벤트 처리
             if event.get("action") == "ATTACK":
                 zone_id = event.get("zone")
                 card_name = event.get("card")
                 
-                # 가상의 카드 객체 임시 생성 (추후 손패 관리 시스템 완성 시 연동)
                 atk_card = Card(card_name, CardType.UNIT, card_name)
-                
-                # 엔진 가동 및 전투 연산 실행
                 battle_logs = engine.execute_attack(zone_id, atk_card, is_player_atk=True)
                 
-                # 연산이 끝난 후 변경된 전체 데이터와 로그를 클라이언트에 전송
                 payload = {
                     "type": "UPDATE",
                     "state": json.loads(get_game_state_json()),
