@@ -3,150 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전략 전쟁 (로컬 엔진 빌드)</title>
+    <title>전략 전쟁 - Full Version</title>
     <style>
         :root {
-            --bg-color: #121214;
-            --panel-bg: #1e1e24;
-            --card-bg: #2a2a32;
-            --text-color: #e2e8f0;
-            --accent-color: #e53e3e; 
-            --blue-color: #3182ce;   
-            --color-unit: #2b3e50;      
+            --bg-dark: #121212; --bg-panel: #1e1e1e; --bg-board: #2c2c2c;
+            --color-text: #e0e0e0; --color-accent: #f39c12; --color-player: #3498db; --color-ai: #e74c3c;
+            --color-item: #9b59b6; --color-skill: #2ecc71;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Malgun Gothic', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .main-menu {
-            width: 100%;
-            max-width: 500px;
-            background-color: var(--panel-bg);
-            border-radius: 12px;
-            padding: 40px 30px;
-            text-align: center;
-            border: 1px solid #2d3748;
-        }
-        .start-btn {
-            background: linear-gradient(135deg, var(--accent-color), #b7791f);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-        }
-        .game-container { display: none; width: 100%; max-width: 950px; background-color: var(--panel-bg); border-radius: 12px; padding: 20px; }
-        .score-board { background: #1a202c; padding: 12px; border-radius: 8px; text-align: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; border: 1px solid #4a5568; }
-        .score-board span { color: var(--accent-color); }
-        .faction-info { background-color: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: space-between; font-size: 0.95rem; border-left: 4px solid var(--accent-color); }
-        .faction-info.player { border-left-color: var(--blue-color); }
-        .battlefield { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .zone { background-color: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; border: 1px solid #3f444e; text-align: center; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; }
-        .zone.ai-target:hover { border-color: var(--accent-color); background-color: rgba(229, 62, 62, 0.05); cursor: crosshair; }
-        .zone-title { font-weight: bold; margin-bottom: 5px; color: #cbd5e0; }
-        .zone-hp { font-size: 0.9rem; margin-bottom: 8px; color: #a0aec0; }
-        .card-slot-wrapper { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-        .card-slot { background-color: var(--card-bg); padding: 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #4a5568; }
-        .card-slot.empty-slot { border: 1px solid #3d4654!important; color: #5d6d82!important; background-color: rgba(20, 20, 25, 0.6)!important; }
-        .card-slot.hidden-card { background: repeating-linear-gradient(45deg, #2d3748, #2d3748 10px, #222831 10px, #222831 20px); color: #a0aec0; }
-        .center-line { grid-column: span 3; text-align: center; font-size: 0.8rem; color: #718096; padding: 5px 0; }
-        .zone.captured-player { background: linear-gradient(180deg, #1A365D, #2B6CB0)!important; border-color: var(--blue-color); justify-content: center; align-items: center;}
-        .zone.captured-ai { background: linear-gradient(180deg, #742A2A, #9B2C2C)!important; border-color: var(--accent-color); justify-content: center; align-items: center;}
-        .captured-msg { font-weight: bold; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .hand-container { background-color: #1a202c; padding: 20px 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2d3748; }
-        .hand-cards { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .real-card { width: 110px; height: 150px; border-radius: 8px; padding: 12px 8px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; border: 2px solid #cbd5e0; background-color: var(--color-unit); }
-        .real-card.selected-card { border-color: #f6ad55!important; box-shadow: 0 0 15px #f6ad55; transform: translateY(-10px); }
-        .card-name { font-size: 0.95rem; font-weight: bold; text-align: center; margin: auto 0; }
-        .bottom-panel { display: grid; grid-template-columns: 40% 60%; border-top: 1px solid #4a5568; padding-top: 15px; gap: 15px; }
-        .panel-box { background-color: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid #2d3748; font-size: 0.85rem; }
-        .log-content { height: 95px; overflow-y: auto; color: #a0aec0; font-family: monospace; }
-        .log-line.system { color: #f6ad55; }
-        .log-line.player-log { color: #63b3ed; }
-        .log-line.ai-log { color: #fc8181; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg-dark); color: var(--color-text); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .game-container { width: 1000px; border: 2px solid #444; background-color: var(--bg-panel); border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
+        
+        /* 헤더 및 스코어 */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #111; border-bottom: 2px solid #333; }
+        .score-board { font-size: 1.5em; font-weight: bold; }
+        .turn-info { font-size: 1.1em; color: var(--color-accent); }
+
+        /* 전장 레이아웃 */
+        .battlefield { display: flex; justify-content: space-around; padding: 20px 10px; background-color: var(--bg-board); }
+        .zone { width: 30%; background-color: #222; border: 2px solid #444; border-radius: 8px; padding: 10px; position: relative; }
+        .zone.captured-player { border-color: var(--color-player); background-color: rgba(52, 152, 219, 0.1); }
+        .zone.captured-ai { border-color: var(--color-ai); background-color: rgba(231, 76, 60, 0.1); }
+        .zone-header { text-align: center; font-weight: bold; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed #666; font-size: 1.1em; }
+        
+        .slot { border: 1px solid #555; background-color: #1a1a1a; margin: 5px 0; padding: 8px; text-align: center; border-radius: 4px; min-height: 24px; position: relative; }
+        .slot.vanguard { background-color: #333; border-color: var(--color-accent); font-weight: bold; color: #fff; }
+        .item-slot { text-align: center; font-size: 0.9em; color: var(--color-item); margin-top: 5px; min-height: 18px; }
+
+        .divider { text-align: center; background-color: #444; color: #aaa; padding: 5px; font-size: 0.9em; letter-spacing: 2px; }
+
+        /* 컨트롤 및 손패 */
+        .controls { padding: 10px; background-color: #1a1a1a; text-align: center; border-top: 2px solid #333; border-bottom: 2px solid #333; }
+        .hand-area { display: flex; justify-content: center; gap: 10px; padding: 15px; flex-wrap: wrap; min-height: 120px; }
+        
+        .card { width: 90px; height: 130px; border: 2px solid #777; border-radius: 6px; background-color: #ddd; color: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; position: relative; }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
+        .card.selected { border-color: var(--color-player); border-width: 4px; background-color: #fff; transform: translateY(-10px); }
+        .card-type { font-size: 0.7em; position: absolute; top: 5px; background: #333; color: #fff; padding: 2px 5px; border-radius: 3px; }
+        .card-name { font-weight: bold; font-size: 1.1em; margin-top: 15px; }
+
+        /* 하단 패널 (로그 및 가이드) */
+        .bottom-panel { display: flex; height: 200px; }
+        .guide-box, .log-box { width: 50%; padding: 15px; overflow-y: auto; font-size: 0.9em; line-height: 1.5; }
+        .guide-box { border-right: 2px solid #333; background-color: #1a1a1a; }
+        .log-box { background-color: #111; }
+        .log-sys { color: #aaa; }
+        .log-player { color: var(--color-player); }
+        .log-ai { color: var(--color-ai); }
+        .log-warn { color: var(--color-item); font-weight: bold; }
+        .log-skill { color: var(--color-skill); }
+
+        /* 버튼 및 모달 */
+        button { background-color: #444; color: #fff; border: 1px solid #666; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; margin: 2px; }
+        button:hover:not(:disabled) { background-color: var(--color-player); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-end-turn { background-color: var(--color-accent); color: #000; font-size: 1.1em; padding: 10px 20px; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--bg-panel); padding: 20px; border-radius: 8px; border: 2px solid var(--color-item); text-align: center; width: 400px; }
+        .modal-content h3 { margin-top: 0; color: var(--color-item); }
+        .modal-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="main-menu" id="mainMenu">
-        <h1>전략 전쟁</h1>
-        <div style="color: #a0aec0; margin-bottom: 30px;">분리형 엔진 빌드 v1.0</div>
-        <button class="start-btn" onclick="startGame()">게임 시작</button>
-    </div>
-
-    <div class="game-container" id="gameScreen">
+<div class="game-container">
+    <div class="header">
+        <div class="turn-info" id="turn-display">코인 토스 중...</div>
         <div class="score-board">
-            스코어 - 플레이어 <span id="p-score">0</span> : <span id="ai-score">0</span> AI
-        </div>
-
-        <div class="faction-info">[ AI 진영 ]</div>
-        <div class="battlefield">
-            <div class="zone ai" id="zone-A-ai" onclick="targetZone('A')">
-                <div class="zone-title">[접전지 A]</div>
-                <div class="card-slot-wrapper" id="slots-A-ai"></div>
-                <div class="zone-hp" id="hp-A-ai">HP: 4/4</div>
-            </div>
-            <div class="zone ai" id="zone-B-ai" onclick="targetZone('B')">
-                <div class="zone-title">[접전지 B]</div>
-                <div class="card-slot-wrapper" id="slots-B-ai"></div>
-                <div class="zone-hp" id="hp-B-ai">HP: 8/8</div>
-            </div>
-            <div class="zone ai" id="zone-C-ai" onclick="targetZone('C')">
-                <div class="zone-title">[접전지 C]</div>
-                <div class="card-slot-wrapper" id="slots-C-ai"></div>
-                <div class="zone-hp" id="hp-C-ai">HP: 4/4</div>
-            </div>
-
-            <div class="center-line">--------------------------------------------------</div>
-
-            <div class="zone player" id="zone-A-player">
-                <div class="zone-title">[접전지 A]</div>
-                <div class="card-slot-wrapper" id="slots-A-player"></div>
-                <div class="zone-hp" id="hp-A-player">HP: 4/4</div>
-            </div>
-            <div class="zone player" id="zone-B-player">
-                <div class="zone-title">[접전지 B]</div>
-                <div class="card-slot-wrapper" id="slots-B-player"></div>
-                <div class="zone-hp" id="hp-B-player">HP: 8/8</div>
-            </div>
-            <div class="zone player" id="zone-C-player">
-                <div class="zone-title">[접전지 C]</div>
-                <div class="card-slot-wrapper" id="slots-C-player"></div>
-                <div class="zone-hp" id="hp-C-player">HP: 4/4</div>
-            </div>
-        </div>
-
-        <div class="faction-info player">[ 플레이어 진영 ]</div>
-        <div class="hand-container">
-            <div class="hand-cards">
-                <div class="real-card" id="card-보병" onclick="selectHandCard('보병')"><div class="card-name">보병</div></div>
-                <div class="real-card" id="card-창병" onclick="selectHandCard('창병')"><div class="card-name">창병</div></div>
-                <div class="real-card" id="card-기병" onclick="selectHandCard('기병')"><div class="card-name">기병</div></div>
-                <div class="real-card" id="card-궁병" onclick="selectHandCard('궁병')"><div class="card-name">궁병</div></div>
-            </div>
-        </div>
-
-        <div class="bottom-panel">
-            <div class="panel-box">
-                <b>⚔️ 상성 규칙</b><br>보병 > 창병 > 기병 > 궁병 > 보병
-            </div>
-            <div class="panel-box">
-                <b>📜 실시간 전투 로그</b>
-                <div class="log-content" id="log-box"></div>
-            </div>
+            <span style="color:var(--color-player)">플레이어 <span id="score-player">0</span></span> 
+            <span style="color:#777"> : </span> 
+            <span style="color:var(--color-ai)"><span id="score-ai">0</span> AI</span>
         </div>
     </div>
 
-    <script src="game_engine.js"></script>
+    <div class="battlefield" id="ai-board">
+        </div>
+
+    <div class="divider">================== 전장 분리선 ==================</div>
+
+    <div class="battlefield" id="player-board">
+         </div>
+
+    <div class="controls">
+        <div style="margin-bottom: 10px; font-size: 1.1em;">
+            선택된 카드: <strong id="selected-card-name" style="color:var(--color-accent)">없음</strong>
+            <button id="btn-use-item" style="display:none; background:var(--color-item); margin-left: 15px;" onclick="handleItemUse()">아이템 사용</button>
+        </div>
+        <div class="hand-area" id="player-hand"></div>
+        <button class="btn-end-turn" id="btn-end-turn" onclick="endTurn()" disabled>턴 종료 (AI 진행)</button>
+    </div>
+
+    <div class="bottom-panel">
+        <div class="guide-box">
+            <strong>[ ⚔️ 상성 안내 ]</strong><br>
+            보병 ➔ 창병 ➔ 기병 ➔ 방패병 ➔ 궁병 ➔ 보병<br>
+            용병: 상성 없음 (기본 55% 승률)<br><br>
+            <strong>[ 🛠️ 조작 가이드 ]</strong><br>
+            1. <strong>배치</strong>: 손패에서 군수 카드 선택 후 내 구역의 [배치] 버튼 클릭<br>
+            2. <strong>공격</strong>: 손패에서 군수 카드 선택 후 상대 구역의 [공격] 버튼 클릭<br>
+            3. <strong>아이템</strong>: 손패에서 아이템 선택 후 위쪽의 [아이템 사용] 버튼 클릭<br>
+            * 첫 턴 제약: 선공(공격/공격형 아이템 불가), 후공(공격형 아이템 불가)
+        </div>
+        <div class="log-box" id="game-log"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="target-modal">
+    <div class="modal-content">
+        <h3 id="modal-title">대상 선택</h3>
+        <p id="modal-desc">아이템을 사용할 대상을 선택하세요.</p>
+        <div class="modal-options" id="modal-options"></div>
+        <button onclick="closeModal()" style="margin-top:15px; background:#666;">취소</button>
+    </div>
+</div>
+
+<script id="game-logic">
+    // [2부에서 제공될 코드 영역]
+</script>
+
 </body>
 </html>
