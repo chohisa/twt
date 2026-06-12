@@ -10,14 +10,15 @@
             --panel-bg: #1e1e24;
             --card-bg: #2a2a32;
             --text-color: #e2e8f0;
-            --accent-color: #e53e3e;
-            --blue-color: #3182ce;
+            --accent-color: #e53e3e; /* AI 색상 (레드) */
+            --blue-color: #3182ce;   /* 플레이어 색상 (블루) */
+            --gray-out: #4a5568;
             
             /* 카드 종류별 고유 색상 */
-            --color-unit: #2b3e50;      /* 군수 카드 (회청색) */
-            --color-atk: #742a2a;       /* 공격형 아이템 (붉은와인색) */
-            --color-def: #22543d;       /* 수비형 아이템 (짙은녹색) */
-            --color-utility: #4c3788;   /* 사용형 아이템 (보라색) */
+            --color-unit: #2b3e50;      
+            --color-atk: #742a2a;       
+            --color-def: #22543d;       
+            --color-utility: #4c3788;   
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,9 +33,7 @@
             padding: 20px;
         }
 
-        /* -----------------------------------------------------------------------------
-           [1] 메인 타이틀 화면 스타일
-        ----------------------------------------------------------------------------- */
+        /* [1] 메인 타이틀 화면 */
         .main-menu {
             width: 100%;
             max-width: 500px;
@@ -48,7 +47,6 @@
 
         .main-menu h1 {
             font-size: 2.5rem;
-            color: var(--text-color);
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -80,11 +78,9 @@
             box-shadow: 0 7px 20px rgba(229, 62, 62, 0.6);
         }
 
-        /* -----------------------------------------------------------------------------
-           [2] 인게임 화면 스타일 (처음엔 숨김)
-        ----------------------------------------------------------------------------- */
+        /* [2] 인게임 화면 */
         .game-container {
-            display: none; /* JS로 활성화 */
+            display: none; 
             width: 100%;
             max-width: 950px;
             background-color: var(--panel-bg);
@@ -93,7 +89,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* 상단 스코어 보드 */
         .score-board {
             background: linear-gradient(90deg, #2d3748, #1a202c);
             padding: 12px;
@@ -106,7 +101,6 @@
         }
         .score-board span { color: var(--accent-color); }
 
-        /* 진영 정보 바 */
         .faction-info {
             background-color: rgba(255,255,255,0.05);
             padding: 8px 15px;
@@ -119,7 +113,6 @@
         }
         .faction-info.player { border-left-color: var(--blue-color); }
 
-        /* 전장 전경 (3개 레인) */
         .battlefield {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -134,6 +127,10 @@
             border: 1px solid #3f444e;
             text-align: center;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 200px;
         }
 
         .zone-title { font-weight: bold; margin-bottom: 5px; color: #cbd5e0; }
@@ -144,7 +141,7 @@
             padding: 4px;
             background-color: #2d3748;
             border-radius: 4px;
-            margin-bottom: 10px;
+            margin: 5px 0;
         }
         .ai .item-status { color: #fc8181; }
         .player .item-status { color: #63b3ed; }
@@ -153,6 +150,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            width: 100%;
         }
 
         .card-slot {
@@ -167,13 +165,12 @@
             color: #718096;
         }
 
-        /* 전장 중앙선 */
         .center-line {
             grid-column: span 3;
             text-align: center;
             font-size: 0.8rem;
             color: #718096;
-            padding: 10px 0;
+            padding: 5px 0;
             position: relative;
         }
         .center-line::before, .center-line::after {
@@ -182,21 +179,36 @@
         .center-line::before { left: 0; }
         .center-line::after { right: 0; }
 
-        /* 점령 완료 상태 */
-        .zone.captured {
-            background-color: #2d3748 !important;
-            opacity: 0.4;
-            pointer-events: none;
-        }
-        .zone.captured .card-slot-wrapper { display: none; }
-        .zone.captured .captured-msg {
-            display: block; padding: 40px 0; font-weight: bold; color: #cbd5e0; font-size: 1.1rem;
-        }
-        .captured-msg { display: none; }
-
         /* -----------------------------------------------------------------------------
-           [3] 리얼 카드 형태의 손패 디자인 구현 구역
+           [수정] 점령 완료 진영별 색상 상태 연출
         ----------------------------------------------------------------------------- */
+        .zone.captured-player {
+            background: linear-gradient(180deg, #1A365D, #2B6CB0) !important;
+            border-color: var(--blue-color);
+        }
+        .zone.captured-ai {
+            background: linear-gradient(180deg, #742A2A, #9B2C2C) !important;
+            border-color: var(--accent-color);
+        }
+        .zone[class*="captured-"] {
+            pointer-events: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .zone[class*="captured-"] .card-slot-wrapper,
+        .zone[class*="captured-"] .item-status,
+        .zone[class*="captured-"] .zone-hp { 
+            display: none; 
+        }
+        .captured-msg {
+            font-weight: bold;
+            color: #fff;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            line-height: 1.6;
+        }
+
+        /* [3] 손패 디자인 */
         .hand-container {
             background-color: #1a202c;
             padding: 20px 15px;
@@ -213,7 +225,6 @@
             flex-wrap: wrap;
         }
 
-        /* 진짜 카드 컴포넌트 프레임 스타일 */
         .real-card {
             width: 120px;
             height: 170px;
@@ -230,14 +241,12 @@
             user-select: none;
         }
 
-        /* 카드 마우스 호버 효과 */
         .real-card:hover {
             transform: translateY(-15px) scale(1.05);
             box-shadow: 0 15px 25px rgba(0,0,0,0.6);
             border-color: #fff;
         }
 
-        /* 종류별 배경색 매핑 */
         .real-card.unit { background-color: var(--color-unit); }
         .real-card.atk-item { background-color: var(--color-atk); }
         .real-card.def-item { background-color: var(--color-def); }
@@ -267,7 +276,7 @@
             color: #e2e8f0;
         }
 
-        /* 하단 분할 패널 (상성표 / 로그) */
+        /* 하단 분할 패널 */
         .bottom-panel {
             display: grid;
             grid-template-columns: 45% 55%;
@@ -317,57 +326,58 @@
         <div class="battlefield">
             <div class="zone ai">
                 <div class="zone-title">[접전지 A]</div>
-                <div class="zone-hp">(최대 체력: 4) | HP: 4</div>
-                <div class="item-status">[ℹ️ 설치 아이템: 1개]</div>
                 <div class="card-slot-wrapper">
                     <div class="card-slot hidden-card">3선발: [ 비공개 ]</div>
                     <div class="card-slot hidden-card">2선발: [ 비공개 ]</div>
                     <div class="card-slot">1선발: [ 창 병 ]</div>
                 </div>
+                <div class="item-status">[ℹ️ 설치 아이템: 1개]</div>
+                <div class="zone-hp">HP: 4 / 4</div>
             </div>
 
-            <div class="zone ai captured">
+            <div class="zone ai captured-ai">
                 <div class="zone-title">[접전지 B]</div>
-                <div class="zone-hp">HP: 0</div>
-                <div class="captured-msg">★점령 완료★<br><small>(행동 불가)</small></div>
+                <div class="captured-msg">★ AI 진영 ★<br>점령 완료</div>
             </div>
 
             <div class="zone ai">
                 <div class="zone-title">[접전지 C]</div>
-                <div class="zone-hp">(최대 체력: 4) | HP: 2</div>
-                <div class="item-status">[ℹ️ 설치 아이템: 1개]</div>
                 <div class="card-slot-wrapper">
                     <div class="card-slot hidden-card">3선발: [ 비공개 ]</div>
                     <div class="card-slot hidden-card">2선발: [ 비공개 ]</div>
                     <div class="card-slot" style="color: #f6ad55;">1선발: [ 🕵️장막(비공개) ]</div>
                 </div>
+                <div class="item-status">[ℹ️ 설치 아이템: 1개]</div>
+                <div class="zone-hp">HP: 2 / 4</div>
             </div>
 
             <div class="center-line">--------------------------- [ 전장 중앙선 ] ---------------------------</div>
 
             <div class="zone player">
-                <div class="card-slot-wrapper" style="margin-bottom: 10px;">
-                    <div class="card-slot" style="color: #718096;">3선발: [ 빈자리 ]</div>
-                    <div class="card-slot">2선발: [ 기 병 ] <small style="color:#718096;">(비공개)</small></div>
+                <div class="zone-title">[접전지 A]</div>
+                <div class="card-slot-wrapper">
                     <div class="card-slot">1선발: [ 보 병 ]</div>
+                    <div class="card-slot">2선발: [ 기 병 ] <small style="color:#718096;">(비공개)</small></div>
+                    <div class="card-slot" style="color: #718096;">3선발: [ 빈자리 ]</div>
                 </div>
                 <div class="item-status">[⚙️ 설치: 함정1, 장막1]</div>
-                <div class="zone-hp">[ 플레이어 체력: 3 ]</div>
+                <div class="zone-hp">HP: 3 / 4</div>
             </div>
 
-            <div class="zone player captured">
-                <div class="captured-msg">★점령 완료★<br><small>(행동 불가)</small></div>
-                <div class="zone-hp">HP: 0</div>
+            <div class="zone player captured-player">
+                <div class="zone-title">[접전지 B]</div>
+                <div class="captured-msg">★ 플레이어 진영 ★<br>점령 완료</div>
             </div>
 
             <div class="zone player">
-                <div class="card-slot-wrapper" style="margin-bottom: 10px;">
-                    <div class="card-slot" style="color: #718096;">3선발: [ 빈자리 ]</div>
-                    <div class="card-slot" style="color: #718096;">2선발: [ 빈자리 ]</div>
+                <div class="zone-title">[접전지 C]</div>
+                <div class="card-slot-wrapper">
                     <div class="card-slot">1선발: [ 궁 병 ]</div>
+                    <div class="card-slot" style="color: #718096;">2선발: [ 빈자리 ]</div>
+                    <div class="card-slot" style="color: #718096;">3선발: [ 빈자리 ]</div>
                 </div>
                 <div class="item-status">[⚙️ 설치: 함정1]</div>
-                <div class="zone-hp">[ 플레이어 체력: 4 ]</div>
+                <div class="zone-hp">HP: 4 / 4</div>
             </div>
         </div>
 
@@ -377,34 +387,34 @@
         </div>
 
         <div class="hand-container">
-            <div class="hand-title">[ 내 손패 (6장) ] *실제 트레이딩 카드 덱 스타일</div>
+            <div class="hand-title">[ 내 손패 (6장) ]</div>
             <div class="hand-cards">
-                <div class="real-card unit" onclick="clickCard('보병', '군수')">
+                <div class="real-card unit" onclick="clickCard('보병')">
                     <div class="card-header"><span>N</span><span>⚔️ 군수</span></div>
                     <div class="card-name">보병</div>
                     <div class="card-footer">스킬: 불굴</div>
                 </div>
-                <div class="real-card unit" onclick="clickCard('방패병', '군수')">
+                <div class="real-card unit" onclick="clickCard('방패병')">
                     <div class="card-header"><span>N</span><span>⚔️ 군수</span></div>
                     <div class="card-name">방패병</div>
                     <div class="card-footer">스킬: 철벽방진</div>
                 </div>
-                <div class="real-card atk-item" onclick="clickCard('총공세 명령', '공격 아이템')">
+                <div class="real-card atk-item" onclick="clickCard('총공세 명령')">
                     <div class="card-header"><span>R</span><span>🔥 공격형</span></div>
                     <div class="card-name" style="font-size:0.85rem;">총공세 명령</div>
                     <div class="card-footer">상성 무시 돌격</div>
                 </div>
-                <div class="real-card atk-item" onclick="clickCard('공성 공병', '공격 아이템')">
+                <div class="real-card atk-item" onclick="clickCard('공성 공병')">
                     <div class="card-header"><span>R</span><span>🔥 공격형</span></div>
                     <div class="card-name">공성 공병</div>
                     <div class="card-footer">80%확률 적제거</div>
                 </div>
-                <div class="real-card def-item" onclick="clickCard('함정', '수비 아이템')">
+                <div class="real-card def-item" onclick="clickCard('함정')">
                     <div class="card-header"><span>N</span><span>🛡️ 수비형</span></div>
                     <div class="card-name">함정</div>
                     <div class="card-footer">설치: 공격 무효</div>
                 </div>
-                <div class="real-card util-item" onclick="clickCard('첩보서', '사용 아이템')">
+                <div class="real-card util-item" onclick="clickCard('첩보서')">
                     <div class="card-header"><span>SR</span><span>⚡ 사용형</span></div>
                     <div class="card-name">첩보서</div>
                     <div class="card-footer">장막 파괴 / 확인</div>
@@ -431,12 +441,10 @@
     </div>
 
     <script>
-        // 화면 전환용 함수
         function startGame() {
             document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
             
-            // 화면 전환 로그 기록
             const logBox = document.getElementById('log-box');
             const newLine = document.createElement('div');
             newLine.className = 'log-line system';
@@ -444,14 +452,9 @@
             logBox.appendChild(newLine);
         }
 
-        // 패 선택 인터랙션
-        function clickCard(cardName, typeName) {
-            const logBox = document.getElementById('log-box');
-            const newLine = document.createElement('div');
-            newLine.className = 'log-line';
-            newLine.innerText = `[${typeName}] '${cardName}'을(를) 선택해 대상을 조준하고 있습니다.`;
-            logBox.appendChild(newLine);
-            logBox.scrollTop = logBox.scrollHeight;
+        // [수정] 카드 조준 로그창 출력 제거 (내부 기능 확장용으로만 함수 유지)
+        function clickCard(cardName) {
+            // 아무 작동도 하지 않고 로그창을 깨끗하게 유지합니다.
         }
     </script>
 </body>
