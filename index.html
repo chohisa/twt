@@ -2,68 +2,328 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>전략 게임 인게임 UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>턴제 전략 전쟁 게임</title>
     <style>
-        body { margin: 0; background: #0f0a0a; color: #d1bfa7; font-family: sans-serif; }
-        .screen { display: none; height: 100vh; flex-direction: column; }
-        .active { display: flex; }
-
-        /* 인게임 메인 컨테이너 */
-        #game-screen { padding: 10px; gap: 10px; }
-
-        /* 영역 구분: 적 초소 / 아군 기지 */
-        .battle-row { display: flex; gap: 10px; justify-content: center; }
-        .zone { 
-            width: 30%; height: 180px; border: 1px solid #4a3728; 
-            background: #1a1212; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; font-size: 0.9em;
+        :root {
+            --bg-color: #121214;
+            --panel-bg: #1e1e24;
+            --card-bg: #2a2a32;
+            --text-color: #e2e8f0;
+            --accent-color: #e53e3e;
+            --blue-color: #3182ce;
+            --gray-out: #4a5568;
         }
 
-        /* 손패 영역 */
-        .hand-area { 
-            display: flex; gap: 10px; padding: 15px; border: 2px solid #333; 
-            background: #1e1e1e; justify-content: center; 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Malgun Gothic', sans-serif;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
         }
-        .card { 
-            width: 90px; height: 130px; background: #2e241c; border: 1px solid #5a4530; 
-            cursor: pointer; transition: transform 0.2s; display: flex; 
-            justify-content: center; align-items: center;
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .card.selected { 
-            transform: translateY(-20px) scale(1.1); 
-            border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+
+        /* 스코어 보드 */
+        .score-board {
+            background: linear-gradient(90deg, #2d3748, #1a202c);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border: 1px solid #4a5568;
         }
+        .score-board span { color: var(--accent-color); }
+
+        /* 진영 정보 바 */
+        .faction-info {
+            background-color: rgba(255,255,255,0.05);
+            padding: 8px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            border-left: 4px solid var(--accent-color);
+        }
+        .faction-info.player { border-left-color: var(--blue-color); }
+
+        /* 전장 전경 (3개 레인) */
+        .battlefield {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .zone {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #3f444e;
+            text-align: center;
+            position: relative;
+        }
+
+        .zone-title { font-weight: bold; margin-bottom: 5px; color: #cbd5e0; }
+        .zone-hp { font-size: 0.9rem; margin-bottom: 8px; color: #a0aec0; }
+        
+        /* 설치 아이템 요약 */
+        .item-status {
+            font-size: 0.8rem;
+            padding: 4px;
+            background-color: #2d3748;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .ai .item-status { color: #fc8181; }
+        .player .item-status { color: #63b3ed; }
+
+        /* 선발 배열 카드 컨테이너 */
+        .card-slot-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-slot {
+            background-color: var(--card-bg);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid #4a5568;
+            transition: all 0.2s;
+        }
+        .card-slot.hidden-card {
+            background: repeating-linear-gradient(45deg, #2d3748, #2d3748 10px, #222831 10px, #222831 20px);
+            color: #718096;
+        }
+
+        /* 전장 중앙선 */
+        .center-line {
+            grid-column: span 3;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #718096;
+            padding: 10px 0;
+            position: relative;
+        }
+        .center-line::before, .center-line::after {
+            content: ""; position: absolute; top: 50%; width: 35%; height: 1px; background-color: #4a5568;
+        }
+        .center-line::before { left: 0; }
+        .center-line::after { right: 0; }
+
+        /* 점령 완료 상태 */
+        .zone.captured {
+            background-color: #2d3748 !important;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .zone.captured .card-slot-wrapper { display: none; }
+        .zone.captured .captured-msg {
+            display: block; padding: 40px 0; font-weight: bold; color: #cbd5e0; font-size: 1.1rem;
+        }
+        .captured-msg { display: none; }
+
+        /* 손패 구역 */
+        .hand-container {
+            background-color: #1a202c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #2d3748;
+        }
+        .hand-title { font-size: 0.9rem; margin-bottom: 10px; color: #a0aec0; }
+        .hand-cards { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .hand-card {
+            background-color: var(--blue-color);
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .hand-card:hover { transform: translateY(-3px); background-color: #4299e1; }
+
+        /* 하단 분할 패널 (상성표 / 로그) */
+        .bottom-panel {
+            display: grid;
+            grid-template-columns: 45% 55%;
+            border-top: 1px solid #4a5568;
+            padding-top: 15px;
+            gap: 15px;
+        }
+
+        .panel-box {
+            background-color: rgba(0,0,0,0.15);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #2d3748;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .panel-box h3 { font-size: 0.95rem; margin-bottom: 8px; color: #cbd5e0; border-bottom: 1px solid #2d3748; padding-bottom: 4px;}
+        
+        .log-content {
+            height: 80px;
+            overflow-y: auto;
+            color: #a0aec0;
+            font-family: monospace;
+        }
+        .log-line { margin-bottom: 4px; }
+        .log-line.system { color: #f6ad55; }
     </style>
 </head>
 <body>
 
-    <div id="game-screen" class="screen active">
-        <div class="battle-row">
-            <div class="zone">적 초소 A (HP: 6)</div>
-            <div class="zone">적 초소 B (HP: 8)</div>
-            <div class="zone">적 초소 C (HP: 4)</div>
+<div class="game-container">
+    <!-- 상단 스코어 보드 -->
+    <div class="score-board">
+        [ SCORE ] 플레이어 <span>1</span> : <span>1</span> AI (상대) &nbsp;|&nbsp; <small>*먼저 2개 점령 시 최종 승리*</small>
+    </div>
+
+    <!-- AI 정보 바 -->
+    <div class="faction-info">
+        <span>[ AI (상대) 진영 ] 손패: 5장</span>
+        <span>총 설치 개수: [ 2 / 4 ]</span>
+    </div>
+
+    <!-- 3개 접전지 필드 -->
+    <div class="battlefield">
+        
+        <!-- 접전지 A (AI 구역) -->
+        <div class="zone ai" id="zone-A-ai">
+            <div class="zone-title">[접전지 A]</div>
+            <div class="zone-hp">(최대 체력: 4) | HP: 4</div>
+            <div class="item-status">[ℹ️ 설치 아이템: 1개]</div>
+            <div class="card-slot-wrapper">
+                <div class="card-slot hidden-card">3선발: [ 비공개 ]</div>
+                <div class="card-slot hidden-card">2선발: [ 비공개 ]</div>
+                <div class="card-slot">1선발: [ 창 병 ]</div>
+            </div>
         </div>
 
-        <div style="text-align: center; color: #555;">[전투 격돌 영역]</div>
-
-        <div class="battle-row">
-            <div class="zone">아군 기지 A</div>
-            <div class="zone">아군 기지 B</div>
-            <div class="zone">아군 기지 C</div>
+        <!-- 접전지 B (AI 구역 - 점령완료 예시) -->
+        <div class="zone ai captured">
+            <div class="zone-title">[접전지 B]</div>
+            <div class="zone-hp">HP: 0</div>
+            <div class="captured-msg">★점령 완료★<br><small>(행동 불가)</small></div>
         </div>
 
-        <div class="hand-area">
-            <div class="card" onclick="selectCard(this)">전술<br>폭파병</div>
-            <div class="card" onclick="selectCard(this)">군수<br>방패병</div>
-            <div class="card" onclick="selectCard(this)">군수<br>보급</div>
+        <!-- 접전지 C (AI 구역) -->
+        <div class="zone ai" id="zone-C-ai">
+            <div class="zone-title">[접전지 C]</div>
+            <div class="zone-hp">(최대 체력: 4) | HP: 2</div>
+            <div class="item-status">[ℹ️ 설치 아이템: 1개]</div>
+            <div class="card-slot-wrapper">
+                <div class="card-slot hidden-card">3선발: [ 비공개 ]</div>
+                <div class="card-slot hidden-card">2선발: [ 비공개 ]</div>
+                <div class="card-slot" style="color: #f6ad55;">1선발: [ 🕵️장막(비공개) ]</div>
+            </div>
+        </div>
+
+        <!-- 전장 중앙선 -->
+        <div class="center-line">--------------------------- [ 전장 중앙선 ] ---------------------------</div>
+
+        <!-- 접전지 A (플레이어 구역) -->
+        <div class="zone player" id="zone-A-player">
+            <div class="card-slot-wrapper" style="margin-bottom: 10px;">
+                <div class="card-slot" style="color: #718096;">3선발: [ 빈자리 ]</div>
+                <div class="card-slot">2선발: [ 기 병 ] <small style="color:#718096;">(비공개)</small></div>
+                <div class="card-slot">1선발: [ 보 병 ]</div>
+            </div>
+            <div class="item-status">[⚙️ 설치: 함정1, 장막1]</div>
+            <div class="zone-hp">[ 플레이어 체력: 3 ]</div>
+        </div>
+
+        <!-- 접전지 B (플레이어 구역 - 점령완료 예시) -->
+        <div class="zone player captured">
+            <div class="captured-msg">★점령 완료★<br><small>(행동 불가)</small></div>
+            <div class="zone-hp">HP: 0</div>
+        </div>
+
+        <!-- 접전지 C (플레이어 구역) -->
+        <div class="zone player" id="zone-C-player">
+            <div class="card-slot-wrapper" style="margin-bottom: 10px;">
+                <div class="card-slot" style="color: #718096;">3선발: [ 빈자리 ]</div>
+                <div class="card-slot" style="color: #718096;">2선발: [ 빈자리 ]</div>
+                <div class="card-slot">1선발: [ 궁 병 ]</div>
+            </div>
+            <div class="item-status">[⚙️ 설치: 함정1]</div>
+            <div class="zone-hp">[ 플레이어 체력: 4 ]</div>
+        </div>
+
+    </div>
+
+    <!-- 플레이어 정보 바 -->
+    <div class="faction-info player">
+        <span>[ 플레이어 (나) 진영 ]</span>
+        <span>총 설치 개수: [ 3 / 4 ]</span>
+    </div>
+
+    <!-- 플레이어 손패 구역 -->
+    <div class="hand-container">
+        <div class="hand-title">[ 내 손패 (6장) ] *카드를 클릭하면 로그 창에 액션이 기록됩니다.</div>
+        <div class="hand-cards">
+            <div class="hand-card" onclick="clickCard('보병')">[1] 보병</div>
+            <div class="hand-card" onclick="clickCard('창병')">[2] 창병</div>
+            <div class="hand-card" onclick="clickCard('방패병')">[3] 방패병</div>
+            <div class="hand-card" onclick="clickCard('함정(설치)')" style="background-color: #2b6cb0;">[4] 함정(설치)</div>
+            <div class="hand-card" onclick="clickCard('첩보서')" style="background-color: #4a5568;">[5] 첩보서</div>
+            <div class="hand-card" onclick="clickCard('군수보급')" style="background-color: #4a5568;">[6] 군수보급</div>
         </div>
     </div>
 
-    <script>
-        function selectCard(cardElement) {
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
-            cardElement.classList.add('selected');
-        }
-    </script>
+    <!-- 하단 분할 패널 -->
+    <div class="bottom-panel">
+        <!-- 좌측: 상성표 요약 -->
+        <div class="panel-box">
+            <h3>💡 상성표 요약</h3>
+            <div>• 보병 ➔ 창병 ➔ 기병</div>
+            <div>• 기병 ➔ 방패병 ➔ 궁병 ➔ 보병</div>
+            <div style="color: #fc8181;">• 상성이 유리하면 100% 승리</div>
+            <div>• 용병: 상성 없음 (기본 승률 55% / 용병끼리 맞붙을 시 공격 측 100% 패배)</div>
+        </div>
+
+        <!-- 우측: 시스템 로그 -->
+        <div class="panel-box">
+            <h3>📜 시스템 로그</h3>
+            <div class="log-content" id="log-box">
+                <div class="log-line system">- 게임이 시작되었습니다. 선후공 코인 토스를 진행합니다.</div>
+                <div class="log-line system">- 당신의 턴입니다.</div>
+                <div class="log-line">- 군수 카드로 상대 1선발을 지정하면 공격이 진행됩니다. (공격 시 턴 자동 종료)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 프로프타입 인터랙션을 위한 간단한 로그 기능
+    function clickCard(cardName) {
+        const logBox = document.getElementById('log-box');
+        const newLine = document.createElement('div');
+        newLine.className = 'log-line';
+        newLine.innerText = `[패 선택] '${cardName}' 카드를 선택했습니다. 대상을 지정하세요.`;
+        logBox.appendChild(newLine);
+        logBox.scrollTop = logBox.scrollHeight; // 스크롤을 항상 아래로
+    }
+</script>
+
 </body>
 </html>
