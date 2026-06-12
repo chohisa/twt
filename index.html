@@ -4,11 +4,28 @@
     <meta charset="UTF-8">
     <title>전략 게임 프로토타입</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
-        .screen { display: none; padding: 20px; }
-        .active { display: block; }
-        .zone { display: inline-block; width: 100px; height: 150px; border: 2px solid #333; margin: 10px; background: white; }
-    </style>
+    body { font-family: 'Arial', sans-serif; background: #2c3e50; color: white; }
+    #game-screen { display: flex; flex-direction: column; align-items: center; }
+    
+    /* 성벽 영역 */
+    .fortress { width: 90%; height: 80px; background: #7f8c8d; margin: 10px; border-radius: 5px; display: flex; justify-content: center; align-items: center; }
+    
+    /* 중앙 접전지 */
+    .battle-area { display: flex; justify-content: space-around; width: 100%; margin: 20px 0; }
+    .zone { width: 80px; height: 120px; border: 3px solid #e74c3c; background: #ecf0f1; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; }
+</style>
+
+<div id="game-screen" class="screen">
+    <div class="fortress">적의 성벽 (AI)</div>
+    
+    <div class="battle-area">
+        <div class="zone">접전지 A<br>HP: 6</div>
+        <div class="zone">접전지 B<br>HP: 8</div>
+        <div class="zone">접전지 C<br>HP: 4</div>
+    </div>
+    
+    <div class="fortress">나의 성벽 (플레이어)</div>
+</div>
 </head>
 <body>
 
