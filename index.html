@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>턴제 전략 전쟁 게임</title>
+    <title>전략 전쟁 (로컬 엔진 버전)</title>
     <style>
         :root {
             --bg-color: #121214;
@@ -154,7 +154,6 @@
             width: 100%;
         }
 
-        /* [핵심 수정] 일반 배치 완료된 카드 슬롯 */
         .card-slot {
             background-color: var(--card-bg);
             padding: 8px;
@@ -164,7 +163,6 @@
             color: #fff;
         }
 
-        /* [핵심 수정] 카드가 없을 때도 무조건 뚜렷하게 형태를 유지하는 빈자리 슬롯 스타일 */
         .card-slot.empty-slot {
             border: 1px solid #3d4654 !important;
             color: #5d6d82 !important;
@@ -173,7 +171,8 @@
 
         .card-slot.hidden-card {
             background: repeating-linear-gradient(45deg, #2d3748, #2d3748 10px, #222831 10px, #222831 20px);
-            color: #718096;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
         }
 
         .center-line {
@@ -258,9 +257,6 @@
         }
 
         .real-card.unit { background-color: var(--color-unit); }
-        .real-card.atk-item { background-color: var(--color-atk); }
-        .real-card.def-item { background-color: var(--color-def); }
-        .real-card.util-item { background-color: var(--color-utility); }
 
         .card-header {
             display: flex;
@@ -312,13 +308,15 @@
         }
         .log-line { margin-bottom: 4px; }
         .log-line.system { color: #f6ad55; }
+        .log-line.player-log { color: #63b3ed; }
+        .log-line.ai-log { color: #fc8181; }
     </style>
 </head>
 <body>
 
     <div class="main-menu" id="mainMenu">
         <h1>전략 전쟁</h1>
-        <div class="subtitle">턴제 카드 전략 시뮬레이션</div>
+        <div class="subtitle">서버리스 클라이언트 통합 테스트 빌드</div>
         <button class="start-btn" onclick="startGame()">게임 시작</button>
     </div>
 
@@ -328,40 +326,28 @@
         </div>
 
         <div class="faction-info">
-            <span>[ AI (상대) 진영 ] 손패: 5장</span>
+            <span>[ AI (상대) 진영 ] 손패: 무제한</span>
             <span id="ai-item-total">총 설치 개수: [ 0 / 4 ]</span>
         </div>
 
         <div class="battlefield">
             <div class="zone ai" id="zone-A-ai" onclick="targetZone('A')">
                 <div class="zone-title">[접전지 A]</div>
-                <div class="card-slot-wrapper" id="slots-A-ai">
-                    <div class="card-slot empty-slot">1선발: [ 비공개 ]</div>
-                    <div class="card-slot empty-slot">2선발: [ 비공개 ]</div>
-                    <div class="card-slot empty-slot">3선발: [ 비공개 ]</div>
-                </div>
+                <div class="card-slot-wrapper" id="slots-A-ai"></div>
                 <div class="item-status" id="item-A-ai">[ℹ️ 설치 아이템: 0개]</div>
                 <div class="zone-hp" id="hp-A-ai">HP: 4 / 4</div>
             </div>
 
             <div class="zone ai" id="zone-B-ai" onclick="targetZone('B')">
                 <div class="zone-title">[접전지 B]</div>
-                <div class="card-slot-wrapper" id="slots-B-ai">
-                    <div class="card-slot empty-slot">1선발: [ 비공개 ]</div>
-                    <div class="card-slot empty-slot">2선발: [ 비공개 ]</div>
-                    <div class="card-slot empty-slot">3선발: [ 비공개 ]</div>
-                </div>
+                <div class="card-slot-wrapper" id="slots-B-ai"></div>
                 <div class="item-status" id="item-B-ai">[ℹ️ 설치 아이템: 0개]</div>
                 <div class="zone-hp" id="hp-B-ai">HP: 8 / 8</div>
             </div>
 
             <div class="zone ai" id="zone-C-ai" onclick="targetZone('C')">
                 <div class="zone-title">[접전지 C]</div>
-                <div class="card-slot-wrapper" id="slots-C-ai">
-                    <div class="card-slot empty-slot">1선발: [ 비공개 ]</div>
-                    <div class="card-slot empty-slot">2선발: [ 비공개 ]</div>
-                    <div class="card-slot empty-slot">3선발: [ 비공개 ]</div>
-                </div>
+                <div class="card-slot-wrapper" id="slots-C-ai"></div>
                 <div class="item-status" id="item-C-ai">[ℹ️ 설치 아이템: 0개]</div>
                 <div class="zone-hp" id="hp-C-ai">HP: 4 / 4</div>
             </div>
@@ -370,33 +356,21 @@
 
             <div class="zone player" id="zone-A-player">
                 <div class="zone-title">[접전지 A]</div>
-                <div class="card-slot-wrapper" id="slots-A-player">
-                    <div class="card-slot empty-slot">1선발: [ 빈자리 ]</div>
-                    <div class="card-slot empty-slot">2선발: [ 빈자리 ]</div>
-                    <div class="card-slot empty-slot">3선발: [ 빈자리 ]</div>
-                </div>
+                <div class="card-slot-wrapper" id="slots-A-player"></div>
                 <div class="item-status" id="item-A-player">[⚙️ 설치: 없음]</div>
                 <div class="zone-hp" id="hp-A-player">HP: 4 / 4</div>
             </div>
 
             <div class="zone player" id="zone-B-player">
                 <div class="zone-title">[접전지 B]</div>
-                <div class="card-slot-wrapper" id="slots-B-player">
-                    <div class="card-slot empty-slot">1선발: [ 빈자리 ]</div>
-                    <div class="card-slot empty-slot">2선발: [ 빈자리 ]</div>
-                    <div class="card-slot empty-slot">3선발: [ 빈자리 ]</div>
-                </div>
+                <div class="card-slot-wrapper" id="slots-B-player"></div>
                 <div class="item-status" id="item-B-player">[⚙️ 설치: 없음]</div>
                 <div class="zone-hp" id="hp-B-player">HP: 8 / 8</div>
             </div>
 
             <div class="zone player" id="zone-C-player">
                 <div class="zone-title">[접전지 C]</div>
-                <div class="card-slot-wrapper" id="slots-C-player">
-                    <div class="card-slot empty-slot">1선발: [ 빈자리 ]</div>
-                    <div class="card-slot empty-slot">2선발: [ 빈자리 ]</div>
-                    <div class="card-slot empty-slot">3선발: [ 빈자리 ]</div>
-                </div>
+                <div class="card-slot-wrapper" id="slots-C-player"></div>
                 <div class="item-status" id="item-C-player">[⚙️ 설치: 없음]</div>
                 <div class="zone-hp" id="hp-C-player">HP: 4 / 4</div>
             </div>
@@ -437,44 +411,52 @@
             <div class="panel-box">
                 <h3>💡 상성표 요약</h3>
                 <div>• 보병 ➔ 창병 ➔ 기병</div>
-                <div>• 기병 ➔ 방패병 ➔ 궁병 ➔ 보병</div>
-                <div style="color: #fc8181;">• 상성이 유리하면 100% 승리</div>
-                <div>• 용병: 상성 없음 (기본 승률 55% / 용병끼리 맞붙을 시 공격 측 100% 패배)</div>
+                <div>• 기병 ➔ 궁병 ➔ 보병</div>
+                <div style="color: #fc8181;">• 상성이 유리하면 100% 승리 (데미지 2)</div>
+                <div>• 무승부 시 동귀어진 (데미지 1) | 열세 시 본인만 전멸 (데미지 0)</div>
             </div>
-
             <div class="panel-box">
-                <h3>📜 시스템 로그</h3>
+                <h3>📜 로컬 전투 실시간 시스템 로그</h3>
                 <div class="log-content" id="log-box"></div>
             </div>
         </div>
     </div>
 
     <script>
-        let ws;
+        // --- [ 내부 통합 자바스크립트 게임 엔진 상태 프레임 ] ---
+        const unitPool = ["보병", "창병", "기병", "궁병"];
         let selectedCategory = null;
+        let gameOver = false;
 
+        let gameState = {
+            player_score: 0,
+            ai_score: 0,
+            zones: {
+                A: { max_hp: 4, player_hp: 4, ai_hp: 4, captured_by: null, player_slots: [null,null,null], ai_slots: [null,null,null] },
+                B: { max_hp: 8, player_hp: 8, ai_hp: 8, captured_by: null, player_slots: [null,null,null], ai_slots: [null,null,null] },
+                C: { max_hp: 4, player_hp: 4, ai_hp: 4, captured_by: null, player_slots: [null,null,null], ai_slots: [null,null,null] }
+            }
+        };
+
+        // [기믹 1] 게임 시작 시 모든 지역 1선발 강제 배치 알고리즘
         function startGame() {
             document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
             
-            ws = new WebSocket("ws://127.0.0.1:8000/ws");
+            appendLog("🤖 시스템 내부 가상 대전 엔진이 성공적으로 로드되었습니다.", "system");
             
-            ws.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                if (data.type === "INIT" || data.type === "UPDATE") {
-                    updateUI(data.state);
-                    if (data.logs) {
-                        data.logs.forEach(msg => appendLog(msg, false));
-                    }
-                }
-            };
-
-            ws.onopen = function() {
-                appendLog("- 파이썬 엔진 서버에 성공적으로 연동되었습니다.", true);
-            };
+            // 모든 접전지 1선발에 랜덤 보충
+            for (let zId in gameState.zones) {
+                gameState.zones[zId].player_slots[0] = unitPool[Math.floor(Math.random() * unitPool.length)];
+                gameState.zones[zId].ai_slots[0] = unitPool[Math.floor(Math.random() * unitPool.length)];
+            }
+            
+            updateUI();
+            appendLog("⚔️ 모든 접전지의 1선발 배치가 완료되었습니다. (1선발 무조건 상호 실명 공개)", "system");
         }
 
         function selectHandCard(cardName) {
+            if (gameOver) return;
             document.querySelectorAll('.real-card').forEach(c => c.classList.remove('selected-card'));
             document.querySelectorAll('.zone.ai').forEach(z => z.classList.remove('ai-target'));
             
@@ -482,52 +464,185 @@
             document.getElementById(`card-${cardName}`).classList.add('selected-card');
             
             document.querySelectorAll('.zone.ai').forEach(z => {
-                z.classList.add('ai-target');
+                const zoneId = z.id.split('-')[1];
+                if (!gameState.zones[zoneId].captured_by) {
+                    z.classList.add('ai-target');
+                }
             });
         }
 
+        // [기믹 1-2] 상성 계산 프레임워크
+        function checkMatchup(atk, def) {
+            if (atk === def) return "DRAW";
+            if ((atk === "보병" && def === "창병") ||
+                (atk === "창병" && def === "기병") ||
+                (atk === "기병" && def === "궁병") ||
+                (atk === "궁병" && def === "보병")) {
+                return "WIN";
+            }
+            return "LOSE";
+        }
+
+        // [기믹 3] 메인 공격 처리 (유저 턴)
         function targetZone(zoneId) {
-            if (!selectedCategory) return;
+            if (!selectedCategory || gameOver) return;
             
-            ws.send(JSON.stringify({
-                "action": "ATTACK",
-                "zone": zoneId,
-                "card": selectedCategory
-            }));
+            const zone = gameState.zones[zoneId];
+            if (zone.captured_by) return;
+
+            appendLog(`[플레이어 공격] 접전지 ${zoneId}에 [${selectedCategory}] 투입!`, "player-log");
             
+            const targetCard = zone.ai_slots[0];
+            let damage = 0;
+
+            if (targetCard) {
+                appendLog(`└─ 상대 수비 1선발 [${targetCard}] 무리와 맞닥뜨렸습니다!`, "system");
+                const res = checkMatchup(selectedCategory, targetCard);
+                
+                if (res === "WIN") {
+                    damage = 2;
+                    appendLog(`   🔥 [상성 압승] [${selectedCategory}]이(가) [${targetCard}]를 파괴했습니다! (데미지 2)`, "player-log");
+                    zone.ai_slots.shift(); zone.ai_slots.push(null); // [기믹 2] 선발 전진 슬라이딩
+                } else if (res === "DRAW") {
+                    damage = 1;
+                    appendLog(`   💥 [동귀어진] 치열한 격전 끝에 양 진영 군수가 동멸했습니다. (데미지 1)`, "system");
+                    zone.ai_slots.shift(); zone.ai_slots.push(null);
+                } else {
+                    damage = 0;
+                    appendLog(`   🛡️ [상성 열세] 적의 방패를 뚫지 못하고 아군 [${selectedCategory}]만 전멸했습니다. (데미지 0)`, "ai-log");
+                }
+            } else {
+                damage = 2;
+                appendLog(`   ⚠️ 적 1선발 진영이 비어있습니다! 본진 다이렉트 타격! (데미지 2)`, "player-log");
+            }
+
+            zone.ai_hp = Math.max(0, zone.ai_hp - damage);
+            
+            // 점령 검사
+            if (zone.ai_hp <= 0 && !zone.captured_by) {
+                zone.captured_by = "PLAYER";
+                gameState.player_score += 1;
+                appendLog(`🚩 [지역 함락] 플레이어가 접전지 ${zoneId}를 정복했습니다!`, "player-log");
+            }
+
+            // UI 초기화 및 후속 AI 처리
             document.querySelectorAll('.real-card').forEach(c => c.classList.remove('selected-card'));
             document.querySelectorAll('.zone.ai').forEach(z => z.classList.remove('ai-target'));
             selectedCategory = null;
+
+            if (checkGameOver()) { updateUI(); return; }
+
+            // [기믹 4] 유저 공격 종료 즉시 AI 반격 및 예약 보충 시동
+            setTimeout(() => { executeAiTurn(); }, 600);
         }
 
-// [수정] 서버에서 준 텍스트 값("빈자리", "비공개", "실제카드이름")에 따라 UI 완벽 구별
+        // [기믹 4-2] AI 예약 보충 및 강제 반격 로직
+        function executeAiTurn() {
+            if (gameOver) return;
+            appendLog("🤖 [AI 상대방 턴 계산 중...]", "system");
+
+            // 1. 2, 3선발 비밀 예약 보충 기믹
+            for (let zId in gameState.zones) {
+                let zone = gameState.zones[zId];
+                if (zone.captured_by) continue;
+
+                for (let i = 1; i <= 2; i++) {
+                    if (zone.ai_slots[i] === null && Math.random() < 0.5) {
+                        zone.ai_slots[i] = unitPool[Math.floor(Math.random() * unitPool.length)];
+                        appendLog(`🤫 AI가 접전지 ${zId}의 ${i+1}선발에 카드를 은밀히 예약했습니다. [비공개]`, "system");
+                        break;
+                    }
+                }
+            }
+
+            // 2. 플레이어 진영 빈 접전지 중 무작위 기습 공격
+            const activeZones = Object.keys(gameState.zones).filter(zId => !gameState.zones[zId].captured_by);
+            if (activeZones.length > 0) {
+                const targetZoneId = activeZones[Math.floor(Math.random() * activeZones.length)];
+                const aiAtkUnit = unitPool[Math.floor(Math.random() * unitPool.length)];
+                const zone = gameState.zones[targetZoneId];
+
+                appendLog(`[AI 기습 역습] 접전지 ${targetZoneId}에 [${aiAtkUnit}] 투입 돌격!`, "ai-log");
+                
+                const playerTarget = zone.player_slots[0];
+                let damage = 0;
+
+                if (playerTarget) {
+                    appendLog(`└─ 내 수비 1선발 [${playerTarget}] 무리가 저항합니다!`, "system");
+                    const res = checkMatchup(aiAtkUnit, playerTarget);
+
+                    if (res === "WIN") {
+                        damage = 2;
+                        appendLog(`   🚨 [상성 패배] 아군 [${playerTarget}] 진형이 완벽히 무너졌습니다. (데미지 2)`, "ai-log");
+                        zone.player_slots.shift(); zone.player_slots.push(null); // 내 선발도 슬라이딩 전진
+                    } else if (res === "DRAW") {
+                        damage = 1;
+                        appendLog(`   💥 [동귀어진] 동반 소멸하며 전선 방어벽이 무너졌습니다. (데미지 1)`, "system");
+                        zone.player_slots.shift(); zone.player_slots.push(null);
+                    } else {
+                        damage = 0;
+                        appendLog(`   💪 [철벽 방어] 아군 [${playerTarget}]이 상성 우위로 적을 섬멸했습니다! (데미지 0)`, "player-log");
+                    }
+                } else {
+                    damage = 2;
+                    appendLog(`   ⚠️ 아군 1선발 라인이 텅 비어 직접 피해를 받았습니다! (데미지 2)`, "ai-log");
+                }
+
+                zone.player_hp = Math.max(0, zone.player_hp - damage);
+
+                if (zone.player_hp <= 0 && !zone.captured_by) {
+                    zone.captured_by = "AI";
+                    gameState.ai_score += 1;
+                    appendLog(`🚨 [지역 상실] AI에게 접전지 ${targetZoneId}의 주도권을 뺏겼습니다!`, "ai-log");
+                }
+            }
+
+            checkGameOver();
+            updateUI();
+        }
+
+        // [기믹 5] 게임 스코어 기반 최종 엔딩 판정
+        function checkGameOver() {
+            if (gameState.player_score >= 2) {
+                gameOver = true;
+                appendLog("🏆🏆🏆 [전쟁 승리] 요충지 2곳을 선점하여 최종 대승을 기록했습니다! 🏆🏆🏆", "system");
+                return true;
+            } else if (gameState.ai_score >= 2) {
+                gameOver = true;
+                appendLog("💀💀💀 [전쟁 패배] 적 연합군에 밀려 최종 패전했습니다. 게임 오버. 💀💀💀", "system");
+                return true;
+            }
+            return false;
+        }
+
+        // 서버 연동 방식에서 쓰던 가이드라인 렌더링을 프론트 데이터로 완벽 구동
         function renderSlots(slotsArray, containerId, isAI) {
             const container = document.getElementById(containerId);
             container.innerHTML = "";
 
             for (let i = 0; i < 3; i++) {
-                const cardName = slotsArray[i] || "빈자리";
+                const cardName = slotsArray[i];
                 
-                if (cardName === "빈자리") {
-                    // 배치가 안 된 완전히 빈 공간 스타일
+                if (!cardName) {
                     container.innerHTML += `<div class="card-slot empty-slot">${i+1}선발: [ 빈자리 ]</div>`;
-                } else if (cardName === "비공개") {
-                    // 카드는 배치되었으나 베일에 싸인 2, 3선발 스타일
-                    container.innerHTML += `<div class="card-slot hidden-card">${i+1}선발: [ 비공개 ]</div>`;
                 } else {
-                    // 1선발처럼 카드가 당당하게 오픈되어 있는 스타일
-                    container.innerHTML += `<div class="card-slot">${i+1}선발: [ ${cardName} ]</div>`;
+                    if (isAI && i > 0) {
+                        // AI이고 2, 3선발 자리에 데이터가 있으면 '비공개'
+                        container.innerHTML += `<div class="card-slot hidden-card">${i+1}선발: [ 비공개 ]</div>`;
+                    } else {
+                        // 내 카드이거나 AI의 1선발이면 무조건 당당하게 실명 노출
+                        container.innerHTML += `<div class="card-slot">${i+1}선발: [ ${cardName} ]</div>`;
+                    }
                 }
             }
         }
 
-        function updateUI(state) {
-            document.getElementById('p-score').innerText = state.player_score;
-            document.getElementById('ai-score').innerText = state.ai_score;
-            document.getElementById('p-item-total').innerText = `총 설치 개수: [ ${state.global_items} / 4 ]`;
+        function updateUI() {
+            document.getElementById('p-score').innerText = gameState.player_score;
+            document.getElementById('ai-score').innerText = gameState.ai_score;
 
             ["A", "B", "C"].forEach(zId => {
-                const zoneData = state.zones[zId];
+                const zoneData = gameState.zones[zId];
                 const aiZone = document.getElementById(`zone-${zId}-ai`);
                 const pZone = document.getElementById(`zone-${zId}-player`);
 
@@ -547,18 +662,16 @@
 
                 document.getElementById(`hp-${zId}-ai`).innerText = `HP: ${zoneData.ai_hp} / ${zId === 'B' ? 8 : 4}`;
                 document.getElementById(`hp-${zId}-player`).innerText = `HP: ${zoneData.player_hp} / ${zId === 'B' ? 8 : 4}`;
-                document.getElementById(`item-${zId}-ai`).innerText = `[ℹ️ 설치 아이템: ${zoneData.ai_item_count}개]`;
-                document.getElementById(`item-${zId}-player`).innerText = `[⚙️ 설치: ${zoneData.player_item_desc}]`;
 
                 renderSlots(zoneData.ai_slots, `slots-${zId}-ai`, true);
                 renderSlots(zoneData.player_slots, `slots-${zId}-player`, false);
             });
         }
 
-        function appendLog(text, isSystem) {
+        function appendLog(text, className) {
             const logBox = document.getElementById('log-box');
             const newLine = document.createElement('div');
-            newLine.className = isSystem ? 'log-line system' : 'log-line';
+            newLine.className = `log-line ${className || ''}`;
             newLine.innerText = text;
             logBox.appendChild(newLine);
             logBox.scrollTop = logBox.scrollHeight;
