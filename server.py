@@ -24,7 +24,6 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 def get_game_state_json():
-    """웹 화면(HTML)이 이해할 수 있도록 현재 엔진의 상태를 포맷팅합니다."""
     return json.dumps({
         "player_score": engine.player_score,
         "ai_score": engine.ai_score,
@@ -39,20 +38,24 @@ def get_game_state_json():
     }, ensure_ascii=False)
 
 def format_zone_data(zone_id: str):
-    """각 접전지의 슬롯 상태를 안전하게 가공합니다."""
+    """[기획 반영] 1선발은 공개, 2·3선발은 배치 시 비공개, 없으면 빈자리"""
     zone = engine.zones[zone_id]
     
-    # 플레이어 슬롯 가공
+    # 플레이어 슬롯 가공 (내 카드는 내가 다 볼 수 있음)
     player_slots_desc = [c.sub_type if c else "빈자리" for c in zone.player_slots]
     
-    # AI 슬롯 가공 (카드가 배치되어 있어도 기본적으로 유저 화면엔 '비공개'로 필터링)
-    # 단, 전투가 벌어져 장막이 걷히거나 패배한 카드가 아니라면 기본값은 '비공개'로 유지합니다.
+    # AI 슬롯 가공 규칙 정밀 반영
     ai_slots_desc = []
-    for c in zone.ai_slots:
+    for idx, c in enumerate(zone.ai_slots):
         if c:
-            # 전투 규칙 연동 전까지는 '비공개' 텍스트를 유지하되 데이터가 있음을 알림
-            ai_slots_desc.append("비공개") 
+            if idx == 0:
+                # 1선발은 장막 효과가 없는 한 무조건 실명 공개!
+                ai_slots_desc.append(c.sub_type)
+            else:
+                # 2, 3선발은 카드가 배치되어 있다면 기본적으로 비공개(장막) 처리
+                ai_slots_desc.append("비공개")
         else:
+            # 배치를 안 한 곳은 무조건 빈자리 표시
             ai_slots_desc.append("빈자리")
             
     return {
@@ -68,8 +71,6 @@ def format_zone_data(zone_id: str):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
-    
-    # 접속하자마자 첫 상태(랜덤 배치된 1선발 포함) 전송
     await websocket.send_text(json.dumps({"type": "INIT", "state": json.loads(get_game_state_json())}, ensure_ascii=False))
     
     try:
