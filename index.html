@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .screen { display: none; padding: 20px; }
+        .active { display: block; }
+        nav { background: #333; color: white; padding: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button onclick="showScreen('home')">홈</button>
+        <button onclick="showScreen('deck')">도감</button>
+        <button onclick="showScreen('game')">인게임</button>
+    </nav>
+
+    <div id="home" class="screen active">
+        <h1>군수 전략 게임</h1>
+        <button onclick="showScreen('game')">게임 시작</button>
+    </div>
+
+    <div id="deck" class="screen">
+        <h1>카드 도감</h1>
+        <div id="card-list">여기에 카드 목록이 표시됩니다.</div>
+    </div>
+
+    <div id="game" class="screen">
+        <h1>인게임 화면</h1>
+        <div style="display: flex; gap: 20px;">
+            <div style="border:1px solid black; width:100px; height:150px;">접전지 A</div>
+            <div style="border:1px solid black; width:100px; height:150px;">접전지 B</div>
+            <div style="border:1px solid black; width:100px; height:150px;">접전지 C</div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
