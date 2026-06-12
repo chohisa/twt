@@ -128,7 +128,6 @@
             transition: all 0.3s ease;
         }
 
-        /* 호버 시 타겟팅 가능한 연출 추가 */
         .zone.ai-target:hover {
             border-color: var(--accent-color);
             background-color: rgba(229, 62, 62, 0.05);
@@ -162,6 +161,13 @@
             font-size: 0.85rem;
             border: 1px solid #4a5568;
         }
+        /* 빈자리 슬롯 스타일 투명도 조절 */
+        .card-slot.empty-slot {
+            border-style: dashed;
+            border-color: #4a5568;
+            color: #718096;
+            background-color: transparent;
+        }
         .card-slot.hidden-card {
             background: repeating-linear-gradient(45deg, #2d3748, #2d3748 10px, #222831 10px, #222831 20px);
             color: #718096;
@@ -181,7 +187,6 @@
         .center-line::before { left: 0; }
         .center-line::after { right: 0; }
 
-        /* [반영 피드백] 점령 완료 시 통째로 한 진영의 색깔 패널로 덮어쓰는 연출 */
         .zone.captured-player {
             background: linear-gradient(180deg, #1A365D, #2B6CB0) !important;
             border-color: var(--blue-color);
@@ -208,7 +213,6 @@
             line-height: 1.6;
         }
 
-        /* 카드 컴포넌트 */
         .hand-container {
             background-color: #1a202c;
             padding: 20px 15px;
@@ -244,7 +248,6 @@
             border-color: #fff;
         }
 
-        /* 유저가 카드를 선택했을 때 활성화 표시 */
         .real-card.selected-card {
             border-color: #f6ad55 !important;
             box-shadow: 0 0 15px #f6ad55;
@@ -338,7 +341,7 @@
                 <div class="zone-title">[접전지 B]</div>
                 <div class="card-slot-wrapper" id="slots-B-ai"></div>
                 <div class="item-status" id="item-B-ai">[ℹ️ 설치 아이템: 0개]</div>
-                <div class="zone-hp" id="hp-B-ai">HP: 8 / 8</div>
+                <div class="zone-hp" id="hp-B-8">HP: 8 / 8</div>
             </div>
 
             <div class="zone ai" id="zone-C-ai" onclick="targetZone('C')">
@@ -427,7 +430,6 @@
             document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
             
-            // 파이썬 웹소켓 서버와 통신 라인 개통
             ws = new WebSocket("ws://127.0.0.1:8000/ws");
             
             ws.onmessage = function(event) {
@@ -446,14 +448,12 @@
         }
 
         function selectHandCard(cardName) {
-            // 기존 선택 제거
             document.querySelectorAll('.real-card').forEach(c => c.classList.remove('selected-card'));
             document.querySelectorAll('.zone.ai').forEach(z => z.classList.remove('ai-target'));
             
             selectedCategory = cardName;
             document.getElementById(`card-${cardName}`).classList.add('selected-card');
             
-            // 상대 진영 필드 조준 연출 온(ON)
             document.querySelectorAll('.zone.ai').forEach(z => {
                 z.classList.add('ai-target');
             });
@@ -462,32 +462,45 @@
         function targetZone(zoneId) {
             if (!selectedCategory) return;
             
-            // 웹소켓을 통해 서버(server.py)에 전술 데이터 패킷 송신
-            ws.send(json = JSON.stringify({
+            ws.send(JSON.stringify({
                 "action": "ATTACK",
                 "zone": zoneId,
                 "card": selectedCategory
             }));
             
-            // 선택 초기화
             document.querySelectorAll('.real-card').forEach(c => c.classList.remove('selected-card'));
             document.querySelectorAll('.zone.ai').forEach(z => z.classList.remove('ai-target'));
             selectedCategory = null;
         }
 
+        // [수정] 데이터가 비어있어도 무조건 1, 2, 3선발 틀을 유지하는 핵심 렌더링 로직
+        function renderSlots(slotsArray, containerId, isAI) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            for (let i = 0; i < 3; i++) {
+                const cardName = slotsArray[i];
+                // 데이터가 없거나 '빈자리' 혹은 '비공개' 일 때 처리
+                if (!cardName || cardName === "빈자리" || cardName === "비공개") {
+                    const defaultText = isAI ? "비공개" : "빈자리";
+                    container.innerHTML += `<div class="card-slot empty-slot">${i+1}선발: [ ${defaultText} ]</div>`;
+                } else {
+                    const isHidden = cardName.includes("장막");
+                    container.innerHTML += `<div class="card-slot ${isHidden ? 'hidden-card' : ''}">${i+1}선발: [ ${cardName} ]</div>`;
+                }
+            }
+        }
+
         function updateUI(state) {
-            // 전역 스코어 갱신
             document.getElementById('p-score').innerText = state.player_score;
             document.getElementById('ai-score').innerText = state.ai_score;
             document.getElementById('p-item-total').innerText = `총 설치 개수: [ ${state.global_items} / 4 ]`;
 
-            // 각 접전지 데이터 실시간 맵핑
             ["A", "B", "C"].forEach(zId => {
                 const zoneData = state.zones[zId];
                 const aiZone = document.getElementById(`zone-${zId}-ai`);
                 const pZone = document.getElementById(`zone-${zId}-player`);
 
-                // [반영 피드백] 점령 판단 후 진영 전체 통합 색칠 연출
                 if (zoneData.captured_by === "PLAYER") {
                     aiZone.className = "zone ai captured-player";
                     pZone.className = "zone player captured-player";
@@ -502,24 +515,16 @@
                     return;
                 }
 
-                // 일반 상태 체력 및 아이템 출력
-                document.getElementById(`hp-${zId}-ai`).innerText = `HP: ${zoneData.ai_hp} / ${zId === 'B' ? 8 : 4}`;
+                // 일반 상태 정보 업데이트
+                const hpTargetAi = document.getElementById(`hp-${zId}-ai`);
+                if(hpTargetAi) hpTargetAi.innerText = `HP: ${zoneData.ai_hp} / ${zId === 'B' ? 8 : 4}`;
                 document.getElementById(`hp-${zId}-player`).innerText = `HP: ${zoneData.player_hp} / ${zId === 'B' ? 8 : 4}`;
                 document.getElementById(`item-${zId}-ai`).innerText = `[ℹ️ 설치 아이템: ${zoneData.ai_item_count}개]`;
                 document.getElementById(`item-${zId}-player`).innerText = `[⚙️ 설치: ${zoneData.player_item_desc}]`;
 
-                // 내부 슬롯 카드 목록 업데이트
-                const aiSlotsDiv = document.getElementById(`slots-${zId}-ai`);
-                aiSlotsDiv.innerHTML = "";
-                zoneData.ai_slots.forEach((s, idx) => {
-                    aiSlotsDiv.innerHTML += `<div class="card-slot ${s === '비공개' ? 'hidden-card' : ''}">${idx+1}선발: [ ${s} ]</div>`;
-                });
-
-                const pSlotsDiv = document.getElementById(`slots-${zId}-player`);
-                pSlotsDiv.innerHTML = "";
-                zoneData.player_slots.forEach((s, idx) => {
-                    pSlotsDiv.innerHTML += `<div class="card-slot">${idx+1}선발: [ ${s} ]</div>`;
-                });
+                // [수정 적용] 항상 고정 3칸 슬롯 렌더링 호출
+                renderSlots(zoneData.ai_slots, `slots-${zId}-ai`, true);
+                renderSlots(zoneData.player_slots, `slots-${zId}-player`, false);
             });
         }
 
