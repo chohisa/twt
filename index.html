@@ -119,6 +119,337 @@
 
 <script id="game-logic">
     // [2부에서 제공될 코드 영역]
+    // --- 게임 데이터 초기화 ---
+const CARD_TYPES = ['보병', '창병', '기병', '방패병', '궁병', '용병'];
+const ITEMS = ['총공세 명령', '공성 공병', '함정', '위장 장막', '첩보서', '군수 보급', '보급 수레', '철수 명령'];
+const ALL_CARDS = [...CARD_TYPES, ...ITEMS];
+
+const MATCHUP = { '보병': '창병', '창병': '기병', '기병': '방패병', '방패병': '궁병', '궁병': '보병' };
+const MAX_HP = { A: 6, B: 8, C: 4 };
+
+let state = {
+    turnCount: 1,
+    isPlayerTurn: false,
+    firstPlayer: null,
+    playerScore: 0, aiScore: 0,
+    playerHand: [], aiHand: [], // AI 손패는 숫자로만 관리해도 되지만 로직상 배열 사용
+    selectedCardIdx: null,
+    turnFlags: { itemUsed: { '공성 공병': 0, '군수 보급': 0, '철수 명령': 0 } },
+    board: {
+        A: { id: 'A', hpP: 6, hpA: 6, slotsP: [], slotsA: [], trapP: false, trapA: false, owner: null },
+        B: { id: 'B', hpP: 8, hpA: 8, slotsP: [], slotsA: [], trapP: false, trapA: false, owner: null },
+        C: { id: 'C', hpP: 4, hpA: 4, slotsP: [], slotsA: [], trapP: false, trapA: false, owner: null }
+    }
+};
+
+// --- 유틸리티 및 로그 ---
+function log(msg, type = 'sys') {
+    const box = document.getElementById('game-log');
+    box.innerHTML += `<p class="log-${type}">- ${msg}</p>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function randInt(max) { return Math.floor(Math.random() * max); }
+function drawCard(isPlayer) {
+    // 70% 확률로 군수카드, 30% 확률로 아이템카드 (임의 비율 설정)
+    const pool = Math.random() < 0.7 ? CARD_TYPES : ITEMS;
+    const card = pool[randInt(pool.length)];
+    if (isPlayer) state.playerHand.push({ name: card, isItem: ITEMS.includes(card) });
+    else state.aiHand.push({ name: card, isItem: ITEMS.includes(card) });
+}
+
+// --- 게임 시작 및 턴 관리 ---
+function initGame() {
+    log("동전 던지기로 선후공을 결정합니다...", "sys");
+    setTimeout(() => {
+        state.firstPlayer = Math.random() < 0.5 ? 'player' : 'ai';
+        const pStarts = state.firstPlayer === 'player';
+        
+        // 손패 분배 (선공 6장, 후공 5장)
+        for(let i=0; i< (pStarts ? 6 : 5); i++) drawCard(true);
+        for(let i=0; i< (pStarts ? 5 : 6); i++) drawCard(false);
+
+        log(`[결과] ${pStarts ? '플레이어' : 'AI'} 선공!`, "sys");
+        startTurn(pStarts);
+    }, 1000);
+}
+
+function startTurn(isPlayer) {
+    state.isPlayerTurn = isPlayer;
+    state.turnFlags = { itemUsed: { '공성 공병': 0, '군수 보급': 0, '철수 명령': 0 } };
+    
+    // 손패 보충 (첫 턴 이후)
+    if (state.turnCount > 1 || (state.turnCount === 1 && !isPlayer && state.firstPlayer==='ai')) {
+        const hand = isPlayer ? state.playerHand : state.aiHand;
+        while(hand.length < 6) drawCard(isPlayer);
+        if(isPlayer) log("턴 시작: 손패가 보충되었습니다.", "sys");
+    }
+
+    document.getElementById('turn-display').innerText = isPlayer ? `[ TURN ${state.turnCount} ] 플레이어 턴` : `[ TURN ${state.turnCount} ] AI 턴`;
+    document.getElementById('btn-end-turn').disabled = !isPlayer;
+    
+    renderAll();
+
+    if (!isPlayer) setTimeout(runAITurn, 1500);
+}
+
+function endTurn() {
+    if (!state.isPlayerTurn) return;
+    state.selectedCardIdx = null;
+    startTurn(false);
+}
+
+// --- 렌더링 ---
+function renderAll() {
+    document.getElementById('score-player').innerText = state.playerScore;
+    document.getElementById('score-ai').innerText = state.aiScore;
+
+    // 핸드 렌더링
+    const handBox = document.getElementById('player-hand');
+    handBox.innerHTML = '';
+    state.playerHand.forEach((c, i) => {
+        const el = document.createElement('div');
+        el.className = `card ${state.selectedCardIdx === i ? 'selected' : ''}`;
+        el.innerHTML = `<div class="card-type">${c.isItem ? '아이템' : '군수'}</div><div class="card-name">${c.name}</div>`;
+        el.onclick = () => selectCard(i);
+        handBox.appendChild(el);
+    });
+
+    const selCard = state.selectedCardIdx !== null ? state.playerHand[state.selectedCardIdx] : null;
+    document.getElementById('selected-card-name').innerText = selCard ? selCard.name : '없음';
+    document.getElementById('btn-use-item').style.display = (selCard && selCard.isItem) ? 'inline-block' : 'none';
+
+    // 전장 렌더링 함수
+    const buildZoneHTML = (zone, isPlayer) => {
+        const slots = isPlayer ? zone.slotsP : zone.slotsA;
+        const hp = isPlayer ? zone.hpP : zone.hpA;
+        const trap = isPlayer ? zone.trapP : zone.trapA;
+        let html = `<div class="zone ${zone.owner ? 'captured-'+zone.owner : ''}">`;
+        html += `<div class="zone-header">접전지 ${zone.id} (HP ${hp})</div>`;
+        
+        if(!isPlayer) {
+            html += `<div class="item-slot">${trap ? '[함정 설치됨]' : ''}</div>`;
+            for(let i=2; i>=0; i--) {
+                const c = slots[i];
+                const displayInfo = c ? (i === 0 ? c.name : '비공개') : '빈자리';
+                html += `<div class="slot ${i===0&&c?'vanguard':''}">${i+1}선발: ${displayInfo}</div>`;
+            }
+            if(!zone.owner && state.isPlayerTurn && selCard && !selCard.isItem) {
+                html += `<button onclick="executeAttack('${zone.id}')" style="width:100%; margin-top:5px; background:var(--color-ai);">공격</button>`;
+            }
+        } else {
+            for(let i=0; i<3; i++) {
+                const c = slots[i];
+                html += `<div class="slot ${i===0&&c?'vanguard':''}">${i+1}선발: ${c ? c.name : '빈자리'}</div>`;
+            }
+            html += `<div class="item-slot">${trap ? '[함정 설치됨]' : ''}</div>`;
+            if(!zone.owner && state.isPlayerTurn && selCard && !selCard.isItem) {
+                html += `<button onclick="executePlace('${zone.id}')" style="width:100%; margin-top:5px; background:var(--color-player);">배치</button>`;
+            }
+        }
+        html += `</div>`;
+        return html;
+    };
+
+    document.getElementById('ai-board').innerHTML = ['A','B','C'].map(id => buildZoneHTML(state.board[id], false)).join('');
+    document.getElementById('player-board').innerHTML = ['A','B','C'].map(id => buildZoneHTML(state.board[id], true)).join('');
+}
+
+function selectCard(i) {
+    if(!state.isPlayerTurn) return;
+    state.selectedCardIdx = state.selectedCardIdx === i ? null : i;
+    renderAll();
+}
+
+// --- 코어 액션: 배치 ---
+function executePlace(zoneId) {
+    const card = state.playerHand[state.selectedCardIdx];
+    const zone = state.board[zoneId];
+    if (zone.slotsP.length >= 3) return alert("해당 지역에는 더 이상 배치할 수 없습니다.");
+    
+    state.playerHand.splice(state.selectedCardIdx, 1);
+    state.selectedCardIdx = null;
+    zone.slotsP.push({ name: card.name, isHidden: false });
+    
+    log(`[배치] 접전지 ${zoneId}에 ${card.name} 배치 완료`, 'player');
+    renderAll();
+}
+
+// --- 코어 액션: 공격 및 전투 로직 ---
+function executeAttack(zoneId) {
+    if (state.turnCount === 1 && state.firstPlayer === 'player') return alert("첫 턴 선공은 공격할 수 없습니다.");
+    
+    const atkCard = state.playerHand.splice(state.selectedCardIdx, 1)[0];
+    state.selectedCardIdx = null;
+    const zone = state.board[zoneId];
+    const defCardObj = zone.slotsA[0];
+    
+    log(`[공격] 플레이어가 ${atkCard.name}(으)로 접전지 ${zoneId} 공격!`, 'player');
+
+    // 기병 스킬: 함정 돌파
+    if (atkCard.name === '기병' && zone.trapA) {
+        log("[스킬] 기병의 돌파 기동! 함정을 파괴하고 무시합니다.", "log-skill");
+        zone.trapA = false;
+    }
+
+    // 함정 발동
+    if (zone.trapA) {
+        log("[아이템] AI의 함정 발동! 공격이 무효화됩니다.", "log-warn");
+        zone.trapA = false;
+        if (Math.random() < 0.01) {
+            log("[아이템] 함정 반격 성공! 플레이어 피해 1!", "log-warn");
+            zone.hpP--;
+        }
+        checkCapture();
+        endTurn();
+        return;
+    }
+
+    // 무방비 공격
+    if (!defCardObj) {
+        log(`접전지 ${zoneId} 무방비 상태! 피해 2!`, 'player');
+        zone.hpA -= 2;
+    } else {
+        const defCard = defCardObj.name;
+        let isAtkWin = false;
+        let dmg = 1;
+
+        if (MATCHUP[atkCard.name] === defCard) isAtkWin = true; // 상성 승리
+        else if (MATCHUP[defCard] === atkCard.name) isAtkWin = false; // 상성 패배
+        else {
+            // 기본 전투
+            if (atkCard.name === '용병' && defCard === '용병') isAtkWin = false;
+            else {
+                let winRate = (atkCard.name === '용병') ? 0.55 : 0.50;
+                isAtkWin = Math.random() < winRate;
+            }
+
+            // 불굴 스킬 처리
+            if (!isAtkWin && defCard === '보병' && Math.random() < 0.5) {
+                log("[스킬] 보병의 불굴 발동! 카드가 제거되지 않습니다.", "log-skill");
+                // 원래는 전투 패배 시 방어카드는 제거 안되므로 추가 처리 불필요. 단지 로그용.
+            }
+        }
+
+        // 창병 스킬: 관통 돌격
+        if (isAtkWin && atkCard.name === '창병' && !MATCHUP[atkCard.name] && Math.random() < 0.4) {
+             log("[스킬] 창병 관통 돌격 발동! 피해량 2!", "log-skill");
+             dmg = 2;
+        }
+
+        if (isAtkWin) {
+            log(`전투 승리! (${atkCard.name} vs ${defCard}) AI 피해 ${dmg}!`, 'player');
+            zone.hpA -= dmg;
+            zone.slotsA.shift(); // 선발 제거 및 승격
+            
+            // 궁병 스킬: 연속 사격 (간단화)
+            if (atkCard.name === '궁병' && zone.slotsA[0] && Math.random() < 0.3) {
+                log("[스킬] 궁병 연속 사격 발동! 추가 타격을 시도합니다 (구현 생략)", "log-skill");
+            }
+        } else {
+            log(`전투 패배... (${atkCard.name} vs ${defCard})`, 'sys');
+        }
+    }
+
+    checkCapture();
+    renderAll();
+    setTimeout(endTurn, 1000);
+}
+
+function checkCapture() {
+    ['A','B','C'].forEach(id => {
+        const z = state.board[id];
+        if (z.owner) return;
+        if (z.hpA <= 0) { z.owner = 'player'; state.playerScore++; z.slotsA=[]; z.slotsP=[]; log(`[점령] 플레이어가 지역 ${id} 점령!`, 'player'); }
+        else if (z.hpP <= 0) { z.owner = 'ai'; state.aiScore++; z.slotsA=[]; z.slotsP=[]; log(`[점령] AI가 지역 ${id} 점령!`, 'ai'); }
+    });
+    
+    if (state.playerScore >= 2) setTimeout(() => alert("축하합니다! 플레이어 승리!"), 500);
+    else if (state.aiScore >= 2) setTimeout(() => alert("AI 승리! 게임 오버."), 500);
+}
+
+// --- 아이템 사용 ---
+function handleItemUse() {
+    const card = state.playerHand[state.selectedCardIdx];
+    if (state.turnCount === 1) {
+        if (state.firstPlayer === 'player' && card.name !== '함정' && card.name !== '위장 장막' && card.name !== '보급 수레') {
+             return alert("선공 첫 턴에는 공격형 아이템을 쓸 수 없습니다.");
+        }
+    }
+    
+    state.playerHand.splice(state.selectedCardIdx, 1);
+    state.selectedCardIdx = null;
+
+    if (card.name === '군수 보급') {
+        if(state.turnFlags.itemUsed['군수 보급'] >= 1) return alert("턴당 1회만 사용 가능합니다.");
+        state.turnFlags.itemUsed['군수 보급']++;
+        drawCard(true); drawCard(true);
+        log("[아이템] 군수 보급 사용: 카드 2장을 획득했습니다.", "player");
+    } else if (card.name === '보급 수레') {
+        log("[아이템] 보급 수레 사용: (자동 타겟팅) 체력이 닳은 지역을 1 회복합니다.", "player");
+        for(let id of ['A','B','C']) {
+            if(state.board[id].hpP < MAX_HP[id]) { state.board[id].hpP++; break; }
+        }
+    } else {
+        log(`[시스템] ${card.name} 효과 발동! (일부 복잡한 아이템은 프로토타입에서 간소화 처리되었습니다.)`, "log-warn");
+    }
+    
+    renderAll();
+}
+
+// --- 간단한 AI 로직 ---
+function runAITurn() {
+    if (state.playerScore >= 2 || state.aiScore >= 2) return;
+    
+    const validZones = ['A','B','C'].filter(id => !state.board[id].owner);
+    if(validZones.length === 0) return;
+    
+    const zoneId = validZones[randInt(validZones.length)];
+    const zone = state.board[zoneId];
+    
+    // AI 액션: 카드 배치 혹은 무작위 공격
+    const hasUnits = state.aiHand.filter(c => !c.isItem);
+    if (hasUnits.length > 0) {
+        const action = Math.random() < 0.6 ? 'place' : 'attack'; // 60% 확률로 수비 중시
+        
+        if (action === 'place' && zone.slotsA.length < 3) {
+            const idx = state.aiHand.findIndex(c => !c.isItem);
+            const card = state.aiHand.splice(idx, 1)[0];
+            zone.slotsA.push({ name: card.name, isHidden: true });
+            log(`[AI 액션] 지역 ${zoneId}에 카드를 배치했습니다.`, 'ai');
+        } else if (action === 'attack') {
+            const idx = state.aiHand.findIndex(c => !c.isItem);
+            const card = state.aiHand.splice(idx, 1)[0];
+            log(`[AI 공격] AI가 지역 ${zoneId} 공격 시도!`, 'ai');
+            
+            if (zone.trapP) {
+                log("[아이템] 플레이어 함정 발동! AI 공격 무효화", "log-warn");
+                zone.trapP = false;
+            } else if (!zone.slotsP[0]) {
+                log(`지역 ${zoneId} 무방비! 플레이어 피해 2!`, 'ai');
+                zone.hpP -= 2;
+            } else {
+                const defCard = zone.slotsP[0].name;
+                const isWin = (MATCHUP[card.name] === defCard) || (!MATCHUP[defCard] && Math.random() < 0.5);
+                if (isWin) {
+                    log(`AI 전투 승리! 플레이어 피해 1! (${card.name} vs ${defCard})`, 'ai');
+                    zone.hpP -= 1;
+                    zone.slotsP.shift();
+                } else {
+                    log(`AI 전투 패배. (${card.name} vs ${defCard})`, 'ai');
+                }
+            }
+            checkCapture();
+        }
+    }
+    
+    state.turnCount++;
+    renderAll();
+    setTimeout(() => startTurn(true), 1500);
+}
+
+// 게임 초기화 구동
+window.onload = initGame;
 </script>
 
 </body>
