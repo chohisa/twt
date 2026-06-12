@@ -2,37 +2,28 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <title>전략 게임 프로토타입</title>
     <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
         .screen { display: none; padding: 20px; }
         .active { display: block; }
-        nav { background: #333; color: white; padding: 10px; }
+        .zone { display: inline-block; width: 100px; height: 150px; border: 2px solid #333; margin: 10px; background: white; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <button onclick="showScreen('home')">홈</button>
-        <button onclick="showScreen('deck')">도감</button>
-        <button onclick="showScreen('game')">인게임</button>
-    </nav>
-
-    <div id="home" class="screen active">
-        <h1>군수 전략 게임</h1>
-        <button onclick="showScreen('game')">게임 시작</button>
+    <div id="home-screen" class="screen active">
+        <h1>군수 카드 전략 게임</h1>
+        <button onclick="showScreen('game-screen')">게임 시작</button>
     </div>
 
-    <div id="deck" class="screen">
-        <h1>카드 도감</h1>
-        <div id="card-list">여기에 카드 목록이 표시됩니다.</div>
-    </div>
-
-    <div id="game" class="screen">
-        <h1>인게임 화면</h1>
-        <div style="display: flex; gap: 20px;">
-            <div style="border:1px solid black; width:100px; height:150px;">접전지 A</div>
-            <div style="border:1px solid black; width:100px; height:150px;">접전지 B</div>
-            <div style="border:1px solid black; width:100px; height:150px;">접전지 C</div>
-        </div>
+    <div id="game-screen" class="screen">
+        <h2>접전지 상황</h2>
+        <div class="zone">A지역<br>HP: 6</div>
+        <div class="zone">B지역<br>HP: 8</div>
+        <div class="zone">C지역<br>HP: 4</div>
+        <br>
+        <button onclick="showScreen('home-screen')">홈으로 돌아가기</button>
     </div>
 
     <script>
