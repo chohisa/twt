@@ -2,64 +2,66 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>전략 게임 인터페이스</title>
+    <title>전략 게임 인게임 UI</title>
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; }
-        .screen { display: none; height: 100vh; justify-content: center; align-items: center; }
-        .active { display: flex; flex-direction: column; }
+        body { margin: 0; background: #0f0a0a; color: #d1bfa7; font-family: sans-serif; }
+        .screen { display: none; height: 100vh; flex-direction: column; }
+        .active { display: flex; }
 
-        /* 홈 화면 */
-        #home-screen { justify-content: center; }
+        /* 인게임 메인 컨테이너 */
+        #game-screen { padding: 10px; gap: 10px; }
 
-        /* 인게임 화면 */
-        #game-screen { justify-content: space-between; padding: 20px; box-sizing: border-box; }
-        .zone-container { display: flex; gap: 20px; }
-        .zone { width: 300px; height: 200px; border: 2px solid #444; background: #261a1a; }
-        
-        /* 손패 영역 */
-        .hand-area { display: flex; gap: 10px; padding: 20px; background: #333; }
-        .card { 
-            width: 80px; height: 120px; background: #4a3728; border: 1px solid #8b5a2b; 
-            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+        /* 영역 구분: 적 초소 / 아군 기지 */
+        .battle-row { display: flex; gap: 10px; justify-content: center; }
+        .zone { 
+            width: 30%; height: 180px; border: 1px solid #4a3728; 
+            background: #1a1212; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; font-size: 0.9em;
         }
-        /* 카드 클릭 효과 (살짝 들려진 느낌) */
+
+        /* 손패 영역 */
+        .hand-area { 
+            display: flex; gap: 10px; padding: 15px; border: 2px solid #333; 
+            background: #1e1e1e; justify-content: center; 
+        }
+        .card { 
+            width: 90px; height: 130px; background: #2e241c; border: 1px solid #5a4530; 
+            cursor: pointer; transition: transform 0.2s; display: flex; 
+            justify-content: center; align-items: center;
+        }
         .card.selected { 
             transform: translateY(-20px) scale(1.1); 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            border-color: #ffd700;
+            border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
     </style>
 </head>
 <body>
 
-    <div id="home-screen" class="screen active">
-        <h1>전략 게임</h1>
-        <button onclick="showScreen('game-screen')">게임 시작</button>
-    </div>
-
-    <div id="game-screen" class="screen">
-        <div class="zone-container">
-            <div class="zone">적 초소 A</div>
-            <div class="zone">적 초소 B</div>
-            <div class="zone">적 초소 C</div>
+    <div id="game-screen" class="screen active">
+        <div class="battle-row">
+            <div class="zone">적 초소 A (HP: 6)</div>
+            <div class="zone">적 초소 B (HP: 8)</div>
+            <div class="zone">적 초소 C (HP: 4)</div>
         </div>
-        <div class="hand-area" id="hand">
-            <div class="card" onclick="selectCard(this)"></div>
-            <div class="card" onclick="selectCard(this)"></div>
-            <div class="card" onclick="selectCard(this)"></div>
+
+        <div style="text-align: center; color: #555;">[전투 격돌 영역]</div>
+
+        <div class="battle-row">
+            <div class="zone">아군 기지 A</div>
+            <div class="zone">아군 기지 B</div>
+            <div class="zone">아군 기지 C</div>
+        </div>
+
+        <div class="hand-area">
+            <div class="card" onclick="selectCard(this)">전술<br>폭파병</div>
+            <div class="card" onclick="selectCard(this)">군수<br>방패병</div>
+            <div class="card" onclick="selectCard(this)">군수<br>보급</div>
         </div>
     </div>
 
     <script>
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
         function selectCard(cardElement) {
-            // 다른 카드 선택 해제
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
-            // 클릭한 카드 선택
             cardElement.classList.add('selected');
         }
     </script>
