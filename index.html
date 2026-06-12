@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전략 전쟁 (로컬 엔진 버전)</title>
+    <title>전략 전쟁 (로컬 엔진 빌드)</title>
     <style>
         :root {
             --bg-color: #121214;
@@ -12,14 +12,8 @@
             --text-color: #e2e8f0;
             --accent-color: #e53e3e; 
             --blue-color: #3182ce;   
-            --gray-out: #4a5568;
-            
             --color-unit: #2b3e50;      
-            --color-atk: #742a2a;       
-            --color-def: #22543d;       
-            --color-utility: #4c3788;   
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background-color: var(--bg-color);
@@ -31,7 +25,6 @@
             min-height: 100vh;
             padding: 20px;
         }
-
         .main-menu {
             width: 100%;
             max-width: 500px;
@@ -39,23 +32,8 @@
             border-radius: 12px;
             padding: 40px 30px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
             border: 1px solid #2d3748;
         }
-
-        .main-menu h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .main-menu .subtitle {
-            color: #a0aec0;
-            font-size: 1.1rem;
-            margin-bottom: 40px;
-        }
-
         .start-btn {
             background: linear-gradient(135deg, var(--accent-color), #b7791f);
             color: white;
@@ -65,248 +43,34 @@
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(229, 62, 62, 0.4);
-            transition: all 0.2s;
             width: 100%;
         }
-
-        .start-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .game-container {
-            display: none; 
-            width: 100%;
-            max-width: 950px;
-            background-color: var(--panel-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .score-board {
-            background: linear-gradient(90deg, #2d3748, #1a202c);
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            border: 1px solid #4a5568;
-        }
+        .game-container { display: none; width: 100%; max-width: 950px; background-color: var(--panel-bg); border-radius: 12px; padding: 20px; }
+        .score-board { background: #1a202c; padding: 12px; border-radius: 8px; text-align: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; border: 1px solid #4a5568; }
         .score-board span { color: var(--accent-color); }
-
-        .faction-info {
-            background-color: rgba(255,255,255,0.05);
-            padding: 8px 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.95rem;
-            border-left: 4px solid var(--accent-color);
-        }
+        .faction-info { background-color: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: space-between; font-size: 0.95rem; border-left: 4px solid var(--accent-color); }
         .faction-info.player { border-left-color: var(--blue-color); }
-
-        .battlefield {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .zone {
-            background-color: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 10px;
-            border: 1px solid #3f444e;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 220px;
-            transition: all 0.3s ease;
-        }
-
-        .zone.ai-target:hover {
-            border-color: var(--accent-color);
-            background-color: rgba(229, 62, 62, 0.05);
-            cursor: crosshair;
-        }
-
+        .battlefield { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .zone { background-color: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; border: 1px solid #3f444e; text-align: center; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; }
+        .zone.ai-target:hover { border-color: var(--accent-color); background-color: rgba(229, 62, 62, 0.05); cursor: crosshair; }
         .zone-title { font-weight: bold; margin-bottom: 5px; color: #cbd5e0; }
         .zone-hp { font-size: 0.9rem; margin-bottom: 8px; color: #a0aec0; }
-        
-        .item-status {
-            font-size: 0.8rem;
-            padding: 4px;
-            background-color: #2d3748;
-            border-radius: 4px;
-            margin: 5px 0;
-        }
-        .ai .item-status { color: #fc8181; }
-        .player .item-status { color: #63b3ed; }
-
-        .card-slot-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 100%;
-        }
-
-        .card-slot {
-            background-color: var(--card-bg);
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            border: 1px solid #4a5568;
-            color: #fff;
-        }
-
-        .card-slot.empty-slot {
-            border: 1px solid #3d4654 !important;
-            color: #5d6d82 !important;
-            background-color: rgba(20, 20, 25, 0.6) !important;
-        }
-
-        .card-slot.hidden-card {
-            background: repeating-linear-gradient(45deg, #2d3748, #2d3748 10px, #222831 10px, #222831 20px);
-            color: #a0aec0;
-            border: 1px solid #4a5568;
-        }
-
-        .center-line {
-            grid-column: span 3;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #718096;
-            padding: 5px 0;
-            position: relative;
-        }
-        .center-line::before, .center-line::after {
-            content: ""; position: absolute; top: 50%; width: 35%; height: 1px; background-color: #4a5568;
-        }
-        .center-line::before { left: 0; }
-        .center-line::after { right: 0; }
-
-        .zone.captured-player {
-            background: linear-gradient(180deg, #1A365D, #2B6CB0) !important;
-            border-color: var(--blue-color);
-        }
-        .zone.captured-ai {
-            background: linear-gradient(180deg, #742A2A, #9B2C2C) !important;
-            border-color: var(--accent-color);
-        }
-        .zone[class*="captured-"] {
-            pointer-events: none !important;
-            justify-content: center;
-            align-items: center;
-        }
-        .zone[class*="captured-"] .card-slot-wrapper,
-        .zone[class*="captured-"] .item-status,
-        .zone[class*="captured-"] .zone-hp { 
-            display: none !important; 
-        }
-        .captured-msg {
-            font-weight: bold;
-            color: #fff;
-            font-size: 1.1rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            line-height: 1.6;
-        }
-
-        .hand-container {
-            background-color: #1a202c;
-            padding: 20px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #2d3748;
-        }
-        .hand-title { font-size: 0.9rem; margin-bottom: 15px; color: #a0aec0; }
-        
-        .hand-cards { 
-            display: flex; 
-            gap: 12px; 
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .real-card {
-            width: 120px;
-            height: 170px;
-            border-radius: 8px;
-            padding: 12px 8px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            cursor: pointer;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-            border: 2px solid #cbd5e0;
-            transition: all 0.2s ease;
-        }
-
-        .real-card:hover {
-            transform: translateY(-10px);
-            border-color: #fff;
-        }
-
-        .real-card.selected-card {
-            border-color: #f6ad55 !important;
-            box-shadow: 0 0 15px #f6ad55;
-            transform: translateY(-15px);
-        }
-
-        .real-card.unit { background-color: var(--color-unit); }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #cbd5e0;
-            font-weight: bold;
-        }
-        .card-name {
-            font-size: 0.95rem;
-            font-weight: bold;
-            text-align: center;
-            margin: auto 0;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-        }
-        .card-footer {
-            text-align: center;
-            font-size: 0.7rem;
-            background-color: rgba(0,0,0,0.3);
-            padding: 2px;
-            border-radius: 4px;
-            color: #e2e8f0;
-        }
-
-        .bottom-panel {
-            display: grid;
-            grid-template-columns: 45% 55%;
-            border-top: 1px solid #4a5568;
-            padding-top: 15px;
-            gap: 15px;
-        }
-
-        .panel-box {
-            background-color: rgba(0,0,0,0.15);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #2d3748;
-            font-size: 0.85rem;
-            line-height: 1.5;
-        }
-        .panel-box h3 { font-size: 0.95rem; margin-bottom: 8px; color: #cbd5e0; border-bottom: 1px solid #2d3748; padding-bottom: 4px;}
-        
-        .log-content {
-            height: 95px;
-            overflow-y: auto;
-            color: #a0aec0;
-            font-family: monospace;
-        }
-        .log-line { margin-bottom: 4px; }
+        .card-slot-wrapper { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .card-slot { background-color: var(--card-bg); padding: 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #4a5568; }
+        .card-slot.empty-slot { border: 1px solid #3d4654!important; color: #5d6d82!important; background-color: rgba(20, 20, 25, 0.6)!important; }
+        .card-slot.hidden-card { background: repeating-linear-gradient(45deg, #2d3748, #2d3748 10px, #222831 10px, #222831 20px); color: #a0aec0; }
+        .center-line { grid-column: span 3; text-align: center; font-size: 0.8rem; color: #718096; padding: 5px 0; }
+        .zone.captured-player { background: linear-gradient(180deg, #1A365D, #2B6CB0)!important; border-color: var(--blue-color); justify-content: center; align-items: center;}
+        .zone.captured-ai { background: linear-gradient(180deg, #742A2A, #9B2C2C)!important; border-color: var(--accent-color); justify-content: center; align-items: center;}
+        .captured-msg { font-weight: bold; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .hand-container { background-color: #1a202c; padding: 20px 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2d3748; }
+        .hand-cards { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .real-card { width: 110px; height: 150px; border-radius: 8px; padding: 12px 8px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; border: 2px solid #cbd5e0; background-color: var(--color-unit); }
+        .real-card.selected-card { border-color: #f6ad55!important; box-shadow: 0 0 15px #f6ad55; transform: translateY(-10px); }
+        .card-name { font-size: 0.95rem; font-weight: bold; text-align: center; margin: auto 0; }
+        .bottom-panel { display: grid; grid-template-columns: 40% 60%; border-top: 1px solid #4a5568; padding-top: 15px; gap: 15px; }
+        .panel-box { background-color: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid #2d3748; font-size: 0.85rem; }
+        .log-content { height: 95px; overflow-y: auto; color: #a0aec0; font-family: monospace; }
         .log-line.system { color: #f6ad55; }
         .log-line.player-log { color: #63b3ed; }
         .log-line.ai-log { color: #fc8181; }
@@ -316,366 +80,73 @@
 
     <div class="main-menu" id="mainMenu">
         <h1>전략 전쟁</h1>
-        <div class="subtitle">서버리스 클라이언트 통합 테스트 빌드</div>
+        <div style="color: #a0aec0; margin-bottom: 30px;">분리형 엔진 빌드 v1.0</div>
         <button class="start-btn" onclick="startGame()">게임 시작</button>
     </div>
 
     <div class="game-container" id="gameScreen">
         <div class="score-board">
-            [ SCORE ] 플레이어 <span id="p-score">0</span> : <span id="ai-score">0</span> AI (상대) &nbsp;|&nbsp; <small>*먼저 2개 점령 시 최종 승리*</small>
+            스코어 - 플레이어 <span id="p-score">0</span> : <span id="ai-score">0</span> AI
         </div>
 
-        <div class="faction-info">
-            <span>[ AI (상대) 진영 ] 손패: 무제한</span>
-            <span id="ai-item-total">총 설치 개수: [ 0 / 4 ]</span>
-        </div>
-
+        <div class="faction-info">[ AI 진영 ]</div>
         <div class="battlefield">
             <div class="zone ai" id="zone-A-ai" onclick="targetZone('A')">
                 <div class="zone-title">[접전지 A]</div>
                 <div class="card-slot-wrapper" id="slots-A-ai"></div>
-                <div class="item-status" id="item-A-ai">[ℹ️ 설치 아이템: 0개]</div>
-                <div class="zone-hp" id="hp-A-ai">HP: 4 / 4</div>
+                <div class="zone-hp" id="hp-A-ai">HP: 4/4</div>
             </div>
-
             <div class="zone ai" id="zone-B-ai" onclick="targetZone('B')">
                 <div class="zone-title">[접전지 B]</div>
                 <div class="card-slot-wrapper" id="slots-B-ai"></div>
-                <div class="item-status" id="item-B-ai">[ℹ️ 설치 아이템: 0개]</div>
-                <div class="zone-hp" id="hp-B-ai">HP: 8 / 8</div>
+                <div class="zone-hp" id="hp-B-ai">HP: 8/8</div>
             </div>
-
             <div class="zone ai" id="zone-C-ai" onclick="targetZone('C')">
                 <div class="zone-title">[접전지 C]</div>
                 <div class="card-slot-wrapper" id="slots-C-ai"></div>
-                <div class="item-status" id="item-C-ai">[ℹ️ 설치 아이템: 0개]</div>
-                <div class="zone-hp" id="hp-C-ai">HP: 4 / 4</div>
+                <div class="zone-hp" id="hp-C-ai">HP: 4/4</div>
             </div>
 
-            <div class="center-line">--------------------------- [ 전장 중앙선 ] ---------------------------</div>
+            <div class="center-line">--------------------------------------------------</div>
 
             <div class="zone player" id="zone-A-player">
                 <div class="zone-title">[접전지 A]</div>
                 <div class="card-slot-wrapper" id="slots-A-player"></div>
-                <div class="item-status" id="item-A-player">[⚙️ 설치: 없음]</div>
-                <div class="zone-hp" id="hp-A-player">HP: 4 / 4</div>
+                <div class="zone-hp" id="hp-A-player">HP: 4/4</div>
             </div>
-
             <div class="zone player" id="zone-B-player">
                 <div class="zone-title">[접전지 B]</div>
                 <div class="card-slot-wrapper" id="slots-B-player"></div>
-                <div class="item-status" id="item-B-player">[⚙️ 설치: 없음]</div>
-                <div class="zone-hp" id="hp-B-player">HP: 8 / 8</div>
+                <div class="zone-hp" id="hp-B-player">HP: 8/8</div>
             </div>
-
             <div class="zone player" id="zone-C-player">
                 <div class="zone-title">[접전지 C]</div>
                 <div class="card-slot-wrapper" id="slots-C-player"></div>
-                <div class="item-status" id="item-C-player">[⚙️ 설치: 없음]</div>
-                <div class="zone-hp" id="hp-C-player">HP: 4 / 4</div>
+                <div class="zone-hp" id="hp-C-player">HP: 4/4</div>
             </div>
         </div>
 
-        <div class="faction-info player">
-            <span>[ 플레이어 (나) 진영 ]</span>
-            <span id="p-item-total">총 설치 개수: [ 0 / 4 ]</span>
-        </div>
-
+        <div class="faction-info player">[ 플레이어 진영 ]</div>
         <div class="hand-container">
-            <div class="hand-title">[ 내 손패 ] *군수 카드를 선택한 후 위의 상대 접전지 칸(A, B, C)을 클릭해 타겟 공격하세요!</div>
             <div class="hand-cards">
-                <div class="real-card unit" id="card-보병" onclick="selectHandCard('보병')">
-                    <div class="card-header"><span>N</span><span>⚔️ 군수</span></div>
-                    <div class="card-name">보병</div>
-                    <div class="card-footer">스킬: 불굴</div>
-                </div>
-                <div class="real-card unit" id="card-창병" onclick="selectHandCard('창병')">
-                    <div class="card-header"><span>N</span><span>⚔️ 군수</span></div>
-                    <div class="card-name">창병</div>
-                    <div class="card-footer">스킬: 관통돌격</div>
-                </div>
-                <div class="real-card unit" id="card-기병" onclick="selectHandCard('기병')">
-                    <div class="card-header"><span>N</span><span>⚔️ 군수</span></div>
-                    <div class="card-name">기병</div>
-                    <div class="card-footer">스킬: 돌파기동</div>
-                </div>
-                <div class="real-card unit" id="card-궁병" onclick="selectHandCard('궁병')">
-                    <div class="card-header"><span>N</span><span>⚔️ 군수</span></div>
-                    <div class="card-name">궁병</div>
-                    <div class="card-footer">스킬: 연속사격</div>
-                </div>
+                <div class="real-card" id="card-보병" onclick="selectHandCard('보병')"><div class="card-name">보병</div></div>
+                <div class="real-card" id="card-창병" onclick="selectHandCard('창병')"><div class="card-name">창병</div></div>
+                <div class="real-card" id="card-기병" onclick="selectHandCard('기병')"><div class="card-name">기병</div></div>
+                <div class="real-card" id="card-궁병" onclick="selectHandCard('궁병')"><div class="card-name">궁병</div></div>
             </div>
         </div>
 
         <div class="bottom-panel">
             <div class="panel-box">
-                <h3>💡 상성표 요약</h3>
-                <div>• 보병 ➔ 창병 ➔ 기병</div>
-                <div>• 기병 ➔ 궁병 ➔ 보병</div>
-                <div style="color: #fc8181;">• 상성이 유리하면 100% 승리 (데미지 2)</div>
-                <div>• 무승부 시 동귀어진 (데미지 1) | 열세 시 본인만 전멸 (데미지 0)</div>
+                <b>⚔️ 상성 규칙</b><br>보병 > 창병 > 기병 > 궁병 > 보병
             </div>
             <div class="panel-box">
-                <h3>📜 로컬 전투 실시간 시스템 로그</h3>
+                <b>📜 실시간 전투 로그</b>
                 <div class="log-content" id="log-box"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        // --- [ 내부 통합 자바스크립트 게임 엔진 상태 프레임 ] ---
-        const unitPool = ["보병", "창병", "기병", "궁병"];
-        let selectedCategory = null;
-        let gameOver = false;
-
-        let gameState = {
-            player_score: 0,
-            ai_score: 0,
-            zones: {
-                A: { max_hp: 4, player_hp: 4, ai_hp: 4, captured_by: null, player_slots: [null,null,null], ai_slots: [null,null,null] },
-                B: { max_hp: 8, player_hp: 8, ai_hp: 8, captured_by: null, player_slots: [null,null,null], ai_slots: [null,null,null] },
-                C: { max_hp: 4, player_hp: 4, ai_hp: 4, captured_by: null, player_slots: [null,null,null], ai_slots: [null,null,null] }
-            }
-        };
-
-        // [기믹 1] 게임 시작 시 모든 지역 1선발 강제 배치 알고리즘
-        function startGame() {
-            document.getElementById('mainMenu').style.display = 'none';
-            document.getElementById('gameScreen').style.display = 'block';
-            
-            appendLog("🤖 시스템 내부 가상 대전 엔진이 성공적으로 로드되었습니다.", "system");
-            
-            // 모든 접전지 1선발에 랜덤 보충
-            for (let zId in gameState.zones) {
-                gameState.zones[zId].player_slots[0] = unitPool[Math.floor(Math.random() * unitPool.length)];
-                gameState.zones[zId].ai_slots[0] = unitPool[Math.floor(Math.random() * unitPool.length)];
-            }
-            
-            updateUI();
-            appendLog("⚔️ 모든 접전지의 1선발 배치가 완료되었습니다. (1선발 무조건 상호 실명 공개)", "system");
-        }
-
-        function selectHandCard(cardName) {
-            if (gameOver) return;
-            document.querySelectorAll('.real-card').forEach(c => c.classList.remove('selected-card'));
-            document.querySelectorAll('.zone.ai').forEach(z => z.classList.remove('ai-target'));
-            
-            selectedCategory = cardName;
-            document.getElementById(`card-${cardName}`).classList.add('selected-card');
-            
-            document.querySelectorAll('.zone.ai').forEach(z => {
-                const zoneId = z.id.split('-')[1];
-                if (!gameState.zones[zoneId].captured_by) {
-                    z.classList.add('ai-target');
-                }
-            });
-        }
-
-        // [기믹 1-2] 상성 계산 프레임워크
-        function checkMatchup(atk, def) {
-            if (atk === def) return "DRAW";
-            if ((atk === "보병" && def === "창병") ||
-                (atk === "창병" && def === "기병") ||
-                (atk === "기병" && def === "궁병") ||
-                (atk === "궁병" && def === "보병")) {
-                return "WIN";
-            }
-            return "LOSE";
-        }
-
-        // [기믹 3] 메인 공격 처리 (유저 턴)
-        function targetZone(zoneId) {
-            if (!selectedCategory || gameOver) return;
-            
-            const zone = gameState.zones[zoneId];
-            if (zone.captured_by) return;
-
-            appendLog(`[플레이어 공격] 접전지 ${zoneId}에 [${selectedCategory}] 투입!`, "player-log");
-            
-            const targetCard = zone.ai_slots[0];
-            let damage = 0;
-
-            if (targetCard) {
-                appendLog(`└─ 상대 수비 1선발 [${targetCard}] 무리와 맞닥뜨렸습니다!`, "system");
-                const res = checkMatchup(selectedCategory, targetCard);
-                
-                if (res === "WIN") {
-                    damage = 2;
-                    appendLog(`   🔥 [상성 압승] [${selectedCategory}]이(가) [${targetCard}]를 파괴했습니다! (데미지 2)`, "player-log");
-                    zone.ai_slots.shift(); zone.ai_slots.push(null); // [기믹 2] 선발 전진 슬라이딩
-                } else if (res === "DRAW") {
-                    damage = 1;
-                    appendLog(`   💥 [동귀어진] 치열한 격전 끝에 양 진영 군수가 동멸했습니다. (데미지 1)`, "system");
-                    zone.ai_slots.shift(); zone.ai_slots.push(null);
-                } else {
-                    damage = 0;
-                    appendLog(`   🛡️ [상성 열세] 적의 방패를 뚫지 못하고 아군 [${selectedCategory}]만 전멸했습니다. (데미지 0)`, "ai-log");
-                }
-            } else {
-                damage = 2;
-                appendLog(`   ⚠️ 적 1선발 진영이 비어있습니다! 본진 다이렉트 타격! (데미지 2)`, "player-log");
-            }
-
-            zone.ai_hp = Math.max(0, zone.ai_hp - damage);
-            
-            // 점령 검사
-            if (zone.ai_hp <= 0 && !zone.captured_by) {
-                zone.captured_by = "PLAYER";
-                gameState.player_score += 1;
-                appendLog(`🚩 [지역 함락] 플레이어가 접전지 ${zoneId}를 정복했습니다!`, "player-log");
-            }
-
-            // UI 초기화 및 후속 AI 처리
-            document.querySelectorAll('.real-card').forEach(c => c.classList.remove('selected-card'));
-            document.querySelectorAll('.zone.ai').forEach(z => z.classList.remove('ai-target'));
-            selectedCategory = null;
-
-            if (checkGameOver()) { updateUI(); return; }
-
-            // [기믹 4] 유저 공격 종료 즉시 AI 반격 및 예약 보충 시동
-            setTimeout(() => { executeAiTurn(); }, 600);
-        }
-
-        // [기믹 4-2] AI 예약 보충 및 강제 반격 로직
-        function executeAiTurn() {
-            if (gameOver) return;
-            appendLog("🤖 [AI 상대방 턴 계산 중...]", "system");
-
-            // 1. 2, 3선발 비밀 예약 보충 기믹
-            for (let zId in gameState.zones) {
-                let zone = gameState.zones[zId];
-                if (zone.captured_by) continue;
-
-                for (let i = 1; i <= 2; i++) {
-                    if (zone.ai_slots[i] === null && Math.random() < 0.5) {
-                        zone.ai_slots[i] = unitPool[Math.floor(Math.random() * unitPool.length)];
-                        appendLog(`🤫 AI가 접전지 ${zId}의 ${i+1}선발에 카드를 은밀히 예약했습니다. [비공개]`, "system");
-                        break;
-                    }
-                }
-            }
-
-            // 2. 플레이어 진영 빈 접전지 중 무작위 기습 공격
-            const activeZones = Object.keys(gameState.zones).filter(zId => !gameState.zones[zId].captured_by);
-            if (activeZones.length > 0) {
-                const targetZoneId = activeZones[Math.floor(Math.random() * activeZones.length)];
-                const aiAtkUnit = unitPool[Math.floor(Math.random() * unitPool.length)];
-                const zone = gameState.zones[targetZoneId];
-
-                appendLog(`[AI 기습 역습] 접전지 ${targetZoneId}에 [${aiAtkUnit}] 투입 돌격!`, "ai-log");
-                
-                const playerTarget = zone.player_slots[0];
-                let damage = 0;
-
-                if (playerTarget) {
-                    appendLog(`└─ 내 수비 1선발 [${playerTarget}] 무리가 저항합니다!`, "system");
-                    const res = checkMatchup(aiAtkUnit, playerTarget);
-
-                    if (res === "WIN") {
-                        damage = 2;
-                        appendLog(`   🚨 [상성 패배] 아군 [${playerTarget}] 진형이 완벽히 무너졌습니다. (데미지 2)`, "ai-log");
-                        zone.player_slots.shift(); zone.player_slots.push(null); // 내 선발도 슬라이딩 전진
-                    } else if (res === "DRAW") {
-                        damage = 1;
-                        appendLog(`   💥 [동귀어진] 동반 소멸하며 전선 방어벽이 무너졌습니다. (데미지 1)`, "system");
-                        zone.player_slots.shift(); zone.player_slots.push(null);
-                    } else {
-                        damage = 0;
-                        appendLog(`   💪 [철벽 방어] 아군 [${playerTarget}]이 상성 우위로 적을 섬멸했습니다! (데미지 0)`, "player-log");
-                    }
-                } else {
-                    damage = 2;
-                    appendLog(`   ⚠️ 아군 1선발 라인이 텅 비어 직접 피해를 받았습니다! (데미지 2)`, "ai-log");
-                }
-
-                zone.player_hp = Math.max(0, zone.player_hp - damage);
-
-                if (zone.player_hp <= 0 && !zone.captured_by) {
-                    zone.captured_by = "AI";
-                    gameState.ai_score += 1;
-                    appendLog(`🚨 [지역 상실] AI에게 접전지 ${targetZoneId}의 주도권을 뺏겼습니다!`, "ai-log");
-                }
-            }
-
-            checkGameOver();
-            updateUI();
-        }
-
-        // [기믹 5] 게임 스코어 기반 최종 엔딩 판정
-        function checkGameOver() {
-            if (gameState.player_score >= 2) {
-                gameOver = true;
-                appendLog("🏆🏆🏆 [전쟁 승리] 요충지 2곳을 선점하여 최종 대승을 기록했습니다! 🏆🏆🏆", "system");
-                return true;
-            } else if (gameState.ai_score >= 2) {
-                gameOver = true;
-                appendLog("💀💀💀 [전쟁 패배] 적 연합군에 밀려 최종 패전했습니다. 게임 오버. 💀💀💀", "system");
-                return true;
-            }
-            return false;
-        }
-
-        // 서버 연동 방식에서 쓰던 가이드라인 렌더링을 프론트 데이터로 완벽 구동
-        function renderSlots(slotsArray, containerId, isAI) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = "";
-
-            for (let i = 0; i < 3; i++) {
-                const cardName = slotsArray[i];
-                
-                if (!cardName) {
-                    container.innerHTML += `<div class="card-slot empty-slot">${i+1}선발: [ 빈자리 ]</div>`;
-                } else {
-                    if (isAI && i > 0) {
-                        // AI이고 2, 3선발 자리에 데이터가 있으면 '비공개'
-                        container.innerHTML += `<div class="card-slot hidden-card">${i+1}선발: [ 비공개 ]</div>`;
-                    } else {
-                        // 내 카드이거나 AI의 1선발이면 무조건 당당하게 실명 노출
-                        container.innerHTML += `<div class="card-slot">${i+1}선발: [ ${cardName} ]</div>`;
-                    }
-                }
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('p-score').innerText = gameState.player_score;
-            document.getElementById('ai-score').innerText = gameState.ai_score;
-
-            ["A", "B", "C"].forEach(zId => {
-                const zoneData = gameState.zones[zId];
-                const aiZone = document.getElementById(`zone-${zId}-ai`);
-                const pZone = document.getElementById(`zone-${zId}-player`);
-
-                if (zoneData.captured_by === "PLAYER") {
-                    aiZone.className = "zone ai captured-player";
-                    pZone.className = "zone player captured-player";
-                    aiZone.innerHTML = `<div class="captured-msg">★ 플레이어 진영 ★<br>접전지 ${zId} 점령 완료</div>`;
-                    pZone.innerHTML = "";
-                    return;
-                } else if (zoneData.captured_by === "AI") {
-                    aiZone.className = "zone ai captured-ai";
-                    pZone.className = "zone player captured-ai";
-                    aiZone.innerHTML = `<div class="captured-msg">★ AI 진영 ★<br>접전지 ${zId} 점령 완료</div>`;
-                    pZone.innerHTML = "";
-                    return;
-                }
-
-                document.getElementById(`hp-${zId}-ai`).innerText = `HP: ${zoneData.ai_hp} / ${zId === 'B' ? 8 : 4}`;
-                document.getElementById(`hp-${zId}-player`).innerText = `HP: ${zoneData.player_hp} / ${zId === 'B' ? 8 : 4}`;
-
-                renderSlots(zoneData.ai_slots, `slots-${zId}-ai`, true);
-                renderSlots(zoneData.player_slots, `slots-${zId}-player`, false);
-            });
-        }
-
-        function appendLog(text, className) {
-            const logBox = document.getElementById('log-box');
-            const newLine = document.createElement('div');
-            newLine.className = `log-line ${className || ''}`;
-            newLine.innerText = text;
-            logBox.appendChild(newLine);
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    </script>
+    <script src="game_engine.js"></script>
 </body>
 </html>
