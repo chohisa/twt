@@ -1,7 +1,9 @@
 *{
+
     margin:0;
     padding:0;
     box-sizing:border-box;
+
 }
 
 body{
@@ -11,38 +13,34 @@ body{
 
     overflow:hidden;
 
-    font-family:
-    "Malgun Gothic",
-    sans-serif;
-
     background:#111;
 
     color:white;
 
-}
+    font-family:
+    Arial,
+    sans-serif;
 
-/* 배경 */
+}
 
 #background{
 
     position:absolute;
 
-    width:100%;
-    height:100%;
+    inset:0;
 
     background:
     linear-gradient(
-        to bottom,
-        #2b2b2b,
-        #111
+        180deg,
+        #3b3b3b,
+        #111111
     );
 
-    animation:
-    bgMove 8s infinite alternate;
+    animation:bgAnim 6s infinite alternate;
 
 }
 
-@keyframes bgMove{
+@keyframes bgAnim{
 
     from{
 
@@ -52,20 +50,18 @@ body{
 
     to{
 
-        filter:brightness(70%);
+        filter:brightness(75%);
 
     }
 
 }
 
-/* 메뉴 */
-
-#mainMenu{
+#menu,
+#coinScene{
 
     position:absolute;
 
-    width:100%;
-    height:100%;
+    inset:0;
 
     display:flex;
 
@@ -77,65 +73,115 @@ body{
 
 }
 
-.title{
+.hidden{
 
-    font-size:72px;
+    display:none !important;
 
-    letter-spacing:8px;
+}
+
+h1{
+
+    font-size:64px;
 
     margin-bottom:15px;
 
-    text-shadow:
-    0 0 20px orange;
-
 }
 
-.subtitle{
-
-    color:#bbbbbb;
+h2{
 
     margin-bottom:60px;
 
-    font-size:24px;
+    color:#bbbbbb;
 
 }
 
-.menuButtons{
+button{
 
-    display:flex;
+    width:260px;
 
-    flex-direction:column;
+    height:60px;
 
-    gap:18px;
-
-}
-
-.menuButtons button{
-
-    width:280px;
-
-    height:65px;
+    margin:10px;
 
     font-size:22px;
+
+    cursor:pointer;
 
     border:none;
 
     border-radius:10px;
 
-    cursor:pointer;
-
-    transition:0.2s;
-
-    background:#333;
+    background:#343434;
 
     color:white;
 
+    transition:.2s;
+
 }
 
-.menuButtons button:hover{
+button:hover{
 
     transform:scale(1.05);
 
     background:#555;
+
+}
+
+#coinText{
+
+    font-size:28px;
+
+    margin-bottom:30px;
+
+}
+
+#coin{
+
+    font-size:170px;
+
+    margin:40px;
+
+}
+
+.spin{
+
+    animation:spin .2s linear infinite;
+}
+
+@keyframes spin{
+
+    0%{
+
+        transform:
+        rotateY(0deg)
+        scale(1);
+
+    }
+
+    50%{
+
+        transform:
+        rotateY(90deg)
+        scale(.8);
+
+    }
+
+    100%{
+
+        transform:
+        rotateY(180deg)
+        scale(1);
+
+    }
+
+}
+
+#result{
+
+    margin-top:20px;
+
+    font-size:36px;
+
+    min-height:50px;
 
 }
