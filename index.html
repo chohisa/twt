@@ -1,46 +1,62 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전략 전쟁</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="style.css">
+<title>전략 전쟁</title>
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
 
 <div id="background"></div>
 
-<div id="mainMenu">
+<div id="menu">
 
-    <h1 class="title">
-        ⚔ 전략 전쟁
-    </h1>
+    <h1>⚔ 전략 전쟁</h1>
 
-    <p class="subtitle">
-        STRATEGY WAR
+    <h2>STRATEGY WAR</h2>
+
+    <button id="startBtn">
+        게임 시작
+    </button>
+
+    <button>
+        덱 편집
+    </button>
+
+    <button>
+        도감
+    </button>
+
+    <button>
+        설정
+    </button>
+
+</div>
+
+<div id="coinScene" class="hidden">
+
+    <h1>선공 결정</h1>
+
+    <p id="coinText">
+        코인을 던집니다...
     </p>
 
-    <div class="menuButtons">
+    <div id="coin">
 
-        <button id="startBtn">
-            게임 시작
-        </button>
-
-        <button>
-            덱 편집
-        </button>
-
-        <button>
-            도감
-        </button>
-
-        <button>
-            설정
-        </button>
+        🪙
 
     </div>
+
+    <div id="result"></div>
+
+    <button id="battleBtn" class="hidden">
+        전투 시작
+    </button>
 
 </div>
 
